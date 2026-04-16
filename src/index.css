@@ -2,7 +2,7 @@
 
 :root {
   --safe-top: 54px;   /* Consistent simulated notch height */
-  --safe-bottom: 34px; /* Consistent simulated home bar height */
+  --safe-bottom: 50px; /* Increased from 34px to lift higher */
   --bg-top: #0b5182;
   --bg-mid: #0b5283;
   --bg-bottom: #092c43;
