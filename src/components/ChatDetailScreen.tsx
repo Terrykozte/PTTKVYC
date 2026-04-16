@@ -486,32 +486,37 @@ export default function ChatDetailScreen(props: {
 
     if (results.length > 0) {
       setTimeout(() => {
-        const el = messageRefs.current[results[0]];
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        safeScrollToMatch(results[0]);
       }, 50);
     }
   }, [showSearch, searchQuery, chatMessages]);
+
+  const safeScrollToMatch = (msgId: string) => {
+    const el = messageRefs.current[msgId];
+    if (el && scrollRef.current) {
+      const container = scrollRef.current;
+      const elTop = el.offsetTop;
+      const elHeight = el.offsetHeight;
+      const containerHeight = container.clientHeight;
+      container.scrollTo({
+        top: elTop - containerHeight / 2 + elHeight / 2,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleNextSearch = () => {
     if (searchResults.length === 0) return;
     const nextIdx = (searchIndex + 1) % searchResults.length;
     setSearchIndex(nextIdx);
-    const el = messageRefs.current[searchResults[nextIdx]];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    safeScrollToMatch(searchResults[nextIdx]);
   };
 
   const handlePrevSearch = () => {
     if (searchResults.length === 0) return;
     const prevIdx = (searchIndex - 1 + searchResults.length) % searchResults.length;
     setSearchIndex(prevIdx);
-    const el = messageRefs.current[searchResults[prevIdx]];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    safeScrollToMatch(searchResults[prevIdx]);
   };
 
   const renderBubbleContent = (msg: Message, isMe: boolean) => {
@@ -1033,7 +1038,7 @@ export default function ChatDetailScreen(props: {
           style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: hideHeader ? 40 : (showSearch ? 170 : 130),
+            paddingTop: hideHeader ? 40 : 130, // Cố định padding 130 thay vì nhảy 170
             paddingBottom: 4, // Minimized to bring last message closer to input bar
             paddingLeft: 0,
             paddingRight: 0,
