@@ -2008,7 +2008,18 @@ export default function HomeScreen({
       setTimeout(() => {
         setFlashOn(false);
         setFired(false);
-        setFlashOv(true);
+        if (flashOn) {
+          setFlashOv(true);
+        } else {
+          // Alternative subtle 'shutter pulse' if flash is off
+          if (bgOverlayRef.current) {
+            bgOverlayRef.current.style.transition = 'opacity 0.1s';
+            bgOverlayRef.current.style.opacity = '0.5';
+            setTimeout(() => { 
+              if (bgOverlayRef.current) bgOverlayRef.current.style.opacity = '0';
+            }, 100);
+          }
+        }
 
         setTimeout(() => {
           setFlashOv(false);
