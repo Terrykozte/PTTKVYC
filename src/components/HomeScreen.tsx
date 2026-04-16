@@ -644,14 +644,7 @@ export default function HomeScreen({
   const [fired, setFired] = useState(false);
   const [flashOv, setFlashOv] = useState(false);
 
-  // 🎉 Auto-trigger Location Picker when selecting from Captions flow
-  useEffect(() => {
-    if (forceCaptionText === '📍 Location' || forceCaptionText?.includes('📍 Location')) {
-      setShowLocationPicker(true);
-    }
-  }, [forceCaptionText]);
 
-  const [viewerIdentity] = useState('P1');
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     if (forceTab) return forceTab;
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -715,6 +708,7 @@ export default function HomeScreen({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [facingModeState, setFacingModeState] = useState<'user' | 'environment'>('user');
+  const [flipKey, setFlipKey] = useState(0);
   const [flipNextIsCW, setFlipNextIsCW] = useState(true);
 
   // Preview Mode State
@@ -1244,6 +1238,13 @@ export default function HomeScreen({
   const [showMapView, setShowMapView] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<PickedLocation | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  // 🎉 Auto-trigger Location Picker when selecting from Captions flow
+  useEffect(() => {
+    if (forceCaptionText === '📍 Location' || forceCaptionText?.includes('📍 Location')) {
+      setShowLocationPicker(true);
+    }
+  }, [forceCaptionText, setShowLocationPicker]);
   const [selectedCalendarPhoto, setSelectedCalendarPhoto] = useState<HistoryItem | null>(null);
   const [showMonthDetail, setShowMonthDetail] = useState<{ month: number; year: number } | null>(null);
 
@@ -3525,7 +3526,7 @@ export default function HomeScreen({
             setActiveCollabDetailId={setActiveCollabDetailId}
             historyFeedRef={historyFeedRef}
             MOCK_FRIENDS={MOCK_FRIENDS}
-            onNavigateToChat={(senderName, senderColor, _ctx) => {
+            onNavigateToChat={(senderName, senderColor) => {
               setDeepLinkChatName(senderName);
               setDeepLinkChatColor(senderColor);
               setTimeout(() => setActiveTab('chat'), 200);
