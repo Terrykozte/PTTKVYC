@@ -39,7 +39,8 @@ body {
 /* ── PHONE — iPhone 16 Pro Max ── */
 .phone {
   width: 430px;
-  height: 932px; /* Fixed height for exact 16 Pro Max layout */
+  height: 932px;
+  height: 100dvh; /* Use dynamic viewport height for mobile responsiveness */
   max-width: 100vw; /* Allow scaling on extremely thin screens */
   position: relative;
   overflow: hidden;
