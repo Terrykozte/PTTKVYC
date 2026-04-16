@@ -1301,6 +1301,7 @@ export default function HomeScreen({
   };
   const messagesRef = useRef<MessagesScreenHandle>(null);
   const isProgrammaticScroll = useRef(false);
+  const isInitialMount = useRef(true);
 
   const rollcallBtnRef = useRef<HTMLButtonElement>(null);
   const mapBtnRef = useRef<HTMLButtonElement>(null);
@@ -1650,7 +1651,10 @@ export default function HomeScreen({
         }
         mainSliderRef.current.scrollTo({ left: targetX, behavior: 'smooth' });
       } else {
-        // Bỏ ép snap bằng JS để giữ nguyên đà vuốt mượt của Native Scroll Snap
+        if (isInitialMount.current) {
+          mainSliderRef.current.scrollLeft = targetX;
+          isInitialMount.current = false;
+        }
         if (forceMidDrag && indicatorRef.current) {
           indicatorRef.current.style.transition = 'none';
           indicatorRef.current.style.transform = `translateX(${targetNavX}px)`;
