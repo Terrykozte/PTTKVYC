@@ -327,7 +327,12 @@ export default function LocationPickerModal({
 
           {/* ── Current location shortcut ── */}
           <div
-            onClick={() => { handlePick({ name: 'Quận 1, TP.HCM', mapX: 65, mapY: 79 }); setFlyTarget(CURRENT_POS); }}
+            onClick={() => { 
+              handlePick({ name: 'Quận 1, TP.HCM', mapX: 65, mapY: 79 }); 
+              setFlyTarget(CURRENT_POS);
+              // Provide instant haptic-like feedback by closing if it's a direct pick
+              setTimeout(onClose, 400); 
+            }}
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: '11px 20px', cursor: 'pointer',
