@@ -3110,7 +3110,7 @@ export default function HomeScreen({
           }}
         >
           {/* 1. LEFT CORNER: Map icon and Rollcall icons (both overlap, opacity controlled by refs) */}
-          <div style={{ position: 'absolute', left: 20, top: 40, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 50px) - 10px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {/* Map Button (Visible in Calendar/Memories tab) */}
             {/* Map Button (Hiện ra khi ở tab Calendar/Memories) */}
             <button
@@ -3272,7 +3272,7 @@ export default function HomeScreen({
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: 40, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 50px) - 10px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button

@@ -184,7 +184,7 @@ export default function MapsArchiveView({ historyItems, viewerIdentity, onClose,
 
           {/* You / All Filter + Locate Me — bottom bar */}
           {!selectedPin && (
-            <div style={{ position: 'absolute', bottom: 20, left: 0, right: 0, zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', bottom: `calc(20px + env(safe-area-inset-bottom))`, left: 0, right: 0, zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
               {/* YOU / ALL pill */}
               <div style={{ display: 'flex', background: 'rgba(10,15,26,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', padding: 4, borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', pointerEvents: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
                 {(['you', 'all'] as const).map(type => (
@@ -243,7 +243,7 @@ export default function MapsArchiveView({ historyItems, viewerIdentity, onClose,
 
           {/* Preview card */}
           {selectedPin && (
-            <div style={{ position: 'absolute', bottom: 12, left: 10, right: 10, zIndex: 1000, background: 'rgba(14,18,28,.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 20, border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 24px 70px rgba(0,0,0,.85)', overflow: 'hidden', animation: 'cardUp .32s cubic-bezier(.16,1,.3,1)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ position: 'absolute', bottom: `calc(12px + env(safe-area-inset-bottom))`, left: 10, right: 10, zIndex: 1000, background: 'rgba(14,18,28,.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 20, border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 24px 70px rgba(0,0,0,.85)', overflow: 'hidden', animation: 'cardUp .32s cubic-bezier(.16,1,.3,1)' }} onClick={e => e.stopPropagation()}>
               <button onClick={() => setSelectedPin(null)} style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, background: 'rgba(0,0,0,.55)', border: 'none', cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(8px)' }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -273,8 +273,6 @@ export default function MapsArchiveView({ historyItems, viewerIdentity, onClose,
             </div>
           )}
         </div>
-
-        <div style={{ height: 18, flexShrink: 0 }} />
       </div>
     </div>
   );
