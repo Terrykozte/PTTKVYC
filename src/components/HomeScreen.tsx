@@ -729,11 +729,13 @@ export default function HomeScreen({
   const blockComposeClickRef = useRef(false);
 
   const handleComposePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
     composeSwipeRef.current = { active: true, startX: e.clientX, lastX: e.clientX, startTime: Date.now(), hasMoved: false };
   };
 
   const handleComposePointerMove = (e: React.PointerEvent) => {
     if (!composeSwipeRef.current.active) return;
+    e.stopPropagation();
     const delta = e.clientX - composeSwipeRef.current.startX;
     if (Math.abs(delta) > 8) {
       composeSwipeRef.current.hasMoved = true;
@@ -745,6 +747,7 @@ export default function HomeScreen({
 
   const handleComposePointerUp = (e: React.PointerEvent) => {
     if (!composeSwipeRef.current.active) return;
+    e.stopPropagation();
     composeSwipeRef.current.active = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
@@ -758,7 +761,7 @@ export default function HomeScreen({
     }
 
     let nextIndex = composePageIndex;
-    if (Math.abs(delta) > 50 || Math.abs(velocity) > 0.5) {
+    if (Math.abs(delta) > (window.innerWidth / 8) || Math.abs(velocity) > 0.5) {
       if (delta < 0 && composePageIndex < 2) nextIndex++;
       else if (delta > 0 && composePageIndex > 0) nextIndex--;
     }
@@ -2435,12 +2438,12 @@ export default function HomeScreen({
 
             {/* MESSAGE COMPOSE AREA — swipeable pager (Message → Challenge → Location) */}
             {mode === 'preview' && (() => {
-              const pagerWidth = 350;
+              const pagerWidth = Math.min(window.innerWidth, 430);
               const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
               return (
                 <div style={{
-                  position: 'absolute', bottom: 25, left: 0, width: '100%', zIndex: 10,
+                  position: 'absolute', bottom: `calc(var(--safe-bottom) + 12px)`, left: 0, width: '100%', zIndex: 10,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>
                   {/* Pager Viewport */}
