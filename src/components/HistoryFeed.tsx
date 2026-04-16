@@ -200,7 +200,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
             ref={idx === 0 ? historyFeedRef : undefined}
             style={{
               width: '100%',
-              height: '100%',
+              height: '100dvh',
               flex: 'none',
               scrollSnapAlign: 'start',
               scrollSnapStop: 'always',
@@ -210,7 +210,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
               overflow: 'hidden'
             }}
           >
-            <div style={{ height: 180, flexShrink: 0 }} />
+            <div style={{ height: 185, flexShrink: 0 }} />
 
             <div className="vf-wrap" style={{ position: 'relative' }}>
               <div style={{

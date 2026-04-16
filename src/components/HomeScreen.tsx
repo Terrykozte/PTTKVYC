@@ -644,7 +644,14 @@ export default function HomeScreen({
   const [fired, setFired] = useState(false);
   const [flashOv, setFlashOv] = useState(false);
 
-  const [flipKey, setFlipKey] = useState(0);
+  // 🎉 Auto-trigger Location Picker when selecting from Captions flow
+  useEffect(() => {
+    if (forceCaptionText === '📍 Location' || forceCaptionText?.includes('📍 Location')) {
+      setShowLocationPicker(true);
+    }
+  }, [forceCaptionText]);
+
+  const [viewerIdentity] = useState('P1');
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     if (forceTab) return forceTab;
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -1432,10 +1439,11 @@ export default function HomeScreen({
     mainDragState.current.snapWidth = el.getBoundingClientRect().width;
     mainDragState.current.snapHeight = vertEl ? vertEl.clientHeight : 0;
 
-    el.style.scrollSnapType = 'none';
+    // We no longer disable scrollSnapType on touch start because we want to rely on native paging.
+    // el.style.scrollSnapType = 'none';
     el.style.scrollBehavior = 'auto';
     if (vertEl) {
-      vertEl.style.scrollSnapType = 'none';
+      // vertEl.style.scrollSnapType = 'none';
       vertEl.style.scrollBehavior = 'auto';
     }
     if (indicatorRef.current) indicatorRef.current.style.transition = 'none';
@@ -1480,28 +1488,11 @@ export default function HomeScreen({
       }
 
       // — HORIZONTAL DRAG —
-      if (mainDragState.current.direction === 'horizontal' && mainSliderRef.current) {
-        const width = mainDragState.current.snapWidth || mainSliderRef.current.offsetWidth;
-        const maxScroll = mainSliderRef.current.scrollWidth - mainSliderRef.current.offsetWidth;
-        let newLeft = mainDragState.current.startScrollL - totalDx;
-
-        if (newLeft < 0) newLeft = rubberBand(newLeft, width);
-        else if (newLeft > maxScroll) newLeft = maxScroll + rubberBand(newLeft - maxScroll, width);
-
-        mainSliderRef.current.scrollLeft = newLeft;
-      }
-
+      // Relying on native scroll-snap for horizontal tabs.
+      // JS-drag is disabled to prevent "free-scrolling" feel.
+      
       // — VERTICAL DRAG —
-      if (mainDragState.current.direction === 'vertical' && homeSlideRef.current) {
-        const h = mainDragState.current.snapHeight || homeSlideRef.current.clientHeight;
-        const maxScroll = homeSlideRef.current.scrollHeight - homeSlideRef.current.clientHeight;
-        let newTop = mainDragState.current.startScrollT - totalDy;
-
-        if (newTop < 0) newTop = rubberBand(newTop, h);
-        else if (newTop > maxScroll) newTop = maxScroll + rubberBand(newTop - maxScroll, h);
-
-        homeSlideRef.current.scrollTop = newTop;
-      }
+      // Also relying on native scroll-snap for history paging.
     };
 
     const restoreScrollers = () => {
@@ -1526,74 +1517,7 @@ export default function HomeScreen({
 
       const dir = mainDragState.current.direction;
 
-      // — SNAP HORIZONTAL —
-      if (dir === 'horizontal' && mainSliderRef.current) {
-        const width = mainDragState.current.snapWidth || mainSliderRef.current.getBoundingClientRect().width;
-        const startScroll = mainDragState.current.startScrollL;
-        const currentScroll = mainSliderRef.current.scrollLeft;
-        const deltaX = currentScroll - startScroll;
-        const startIndex = Math.round(startScroll / width);
-        let step = 0;
-
-        if (Math.abs(deltaX) > width * 0.2 || Math.abs(mainDragState.current.velX) > 0.5) {
-          step = deltaX > 0 ? 1 : -1;
-        }
-
-        let targetIndex = Math.max(0, Math.min(tabs.length - 1, startIndex + step));
-        const targetX = targetIndex * width;
-
-        // CUSTOM SPRING-LIKE SMOOTH SNAP 
-        isProgrammaticScroll.current = true;
-        
-        const duration = 450;
-        const startTime = performance.now();
-        const startX = currentScroll;
-        
-        const animate = (now: number) => {
-          const elapsed = now - startTime;
-          const p = Math.min(1, elapsed / duration);
-          // Quintic ease-out curve for premium "gentle" feel
-          const ease = 1 - Math.pow(1 - p, 5);
-          
-          if (mainSliderRef.current) {
-            mainSliderRef.current.scrollLeft = startX + (targetX - startX) * ease;
-          }
-          
-          if (p < 1) {
-            mainDragState.current.raf = requestAnimationFrame(animate);
-          } else {
-            isProgrammaticScroll.current = false;
-            setActiveTab(tabs[targetIndex]);
-            restoreScrollers();
-          }
-        };
-        mainDragState.current.raf = requestAnimationFrame(animate);
-        
-        if (indicatorRef.current) {
-          indicatorRef.current.style.transition = `transform ${duration}ms cubic-bezier(0.23, 1, 0.32, 1)`;
-          indicatorRef.current.style.transform = `translateX(${targetIndex * 52}px)`;
-        }
-        return; // Early return to avoid default restoreScrollers below
-      }
-
-      // — SNAP VERTICAL —
-      if (dir === 'vertical' && homeSlideRef.current) {
-        const el = homeSlideRef.current;
-        const h = mainDragState.current.snapHeight || el.clientHeight;
-        const startTop = mainDragState.current.startScrollT;
-        const delta = el.scrollTop - startTop;
-        const startIdx = Math.round(startTop / h);
-        let step = 0;
-
-        if (Math.abs(delta) > h * 0.2 || Math.abs(mainDragState.current.velY) > 0.4) {
-          step = delta > 0 ? 1 : -1;
-        }
-
-        const totalPages = 1 + historyItems.length;
-        const targetIdx = Math.max(0, Math.min(totalPages - 1, startIdx + step));
-        el.scrollTo({ top: targetIdx * h, behavior: 'smooth' });
-      }
-
+      // Native scroll-snap handles the release.
       restoreScrollers();
     };
 
@@ -2004,7 +1928,7 @@ export default function HomeScreen({
         isChallenge: isChallengePost,
         challengeTag: resolvedSlot
           ? `W${_currentWeekNum} D${dayWithinWeek} - ${resolvedSlot.theme}` : undefined,
-        location: selectedLocation || (finalCaption?.toLowerCase().includes('quận 1') || finalCaption?.toLowerCase().includes('district 1') ? { name: 'Quận 1, HCM', mapX: 45, mapY: 48 } : undefined),
+        location: selectedLocation || (finalCaption?.toLowerCase().includes('quận 1') || finalCaption?.toLowerCase().includes('district 1') ? { name: 'Quận 1, HCM', mapX: 65, mapY: 79 } : undefined),
       };
 
       setHistoryItems(prev => [newItem, ...prev]);
@@ -2384,7 +2308,7 @@ export default function HomeScreen({
       `}</style>
 
       {/* TOP SPACER — accounts for the GlobalHeader overlay height */}
-      <div style={{ height: 130, flexShrink: 0 }} />
+      <div style={{ height: 165, flexShrink: 0 }} />
 
       {/* VIEWFINDER 1:1 FULL WIDTH */}
       <div className="vf-wrap" onWheel={handleWheelZoom}>
@@ -2680,7 +2604,7 @@ export default function HomeScreen({
         </div>
       )}
 
-      <div style={{ height: 16 }} />
+      <div style={{ flex: 1, minHeight: 16 }} />
 
       {/* CONTROLS — positions FIXED, only icons swap */}
       <div className="controls">
@@ -3110,7 +3034,7 @@ export default function HomeScreen({
           }}
         >
           {/* 1. LEFT CORNER: Map icon and Rollcall icons (both overlap, opacity controlled by refs) */}
-          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 60px) + 25px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 47px) + 2px)`, height: 50, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {/* Map Button (Visible in Calendar/Memories tab) */}
             {/* Map Button (Hiện ra khi ở tab Calendar/Memories) */}
             <button
@@ -3176,7 +3100,7 @@ export default function HomeScreen({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'absolute',
-            left: 0, right: 0, top: 40, height: 60,
+            left: 0, right: 0, top: `calc(env(safe-area-inset-top, 47px) + 2px)`, height: 50,
             pointerEvents: 'none',
             zIndex: 100
           }}>
@@ -3272,7 +3196,7 @@ export default function HomeScreen({
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 60px) + 25px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 47px) + 2px)`, height: 50, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button
@@ -3392,7 +3316,7 @@ export default function HomeScreen({
           overflowY: 'auto',
           pointerEvents: activeTab === 'calendar' ? 'auto' : 'none'
         }}>
-          <div style={{ height: 150, flexShrink: 0 }} />
+          <div style={{ height: 185, flexShrink: 0 }} />
 
           {/* "First Memory" banner */}
           {(() => {
@@ -3575,7 +3499,7 @@ export default function HomeScreen({
           }}
         >
           {/* ── PAGE 1: Camera / Home ── */}
-          <div className="screen-item" style={{ position: 'relative' }}>
+          <div className="screen-item" style={{ position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
             {mainHomeContent}
           </div>
 
