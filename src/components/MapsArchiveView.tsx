@@ -208,22 +208,22 @@ export default function MapsArchiveView({ historyItems, viewerIdentity, onClose,
           <div style={{ position: 'absolute', top: 16, left: 12, right: 12, zIndex: 1200 }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(8,12,22,0.90)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255,255,255,0.13)', borderRadius: 20,
-              padding: '10px 12px 10px 18px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.65)',
+              background: 'rgba(8,12,22,0.92)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+              border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 28,
+              padding: '12px 16px 12px 24px',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.75)',
             }}>
               <div>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 1 }}>Private Archive</div>
-                <div style={{ color: 'white', fontSize: 18, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1 }}>Memory Map</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 2 }}>Private Archive</div>
+                <div style={{ color: 'white', fontSize: 21, fontWeight: 950, letterSpacing: -0.6, lineHeight: 1.1 }}>Memory Map</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: 'white', fontSize: 13, fontWeight: 900 }}>{pins.length} địa điểm</div>
-                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700 }}>{displayPhotos.length} kỷ niệm</div>
+                  <div style={{ color: 'white', fontSize: 15, fontWeight: 900 }}>{pins.length} địa điểm</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700 }}>{displayPhotos.length} kỷ niệm</div>
                 </div>
-                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', borderRadius: '50%', width: 34, height: 34, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', borderRadius: '50%', width: 40, height: 40, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, transition: 'background 0.2s' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
             </div>
