@@ -643,6 +643,14 @@ export default function HomeScreen({
   const [focusPoint, setFocusPoint] = useState<{ x: number, y: number } | null>(null);
   const [fired, setFired] = useState(false);
   const [flashOv, setFlashOv] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(430);
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
 
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
@@ -761,7 +769,7 @@ export default function HomeScreen({
     }
 
     let nextIndex = composePageIndex;
-    if (Math.abs(delta) > (window.innerWidth / 8) || Math.abs(velocity) > 0.5) {
+    if (Math.abs(delta) > (viewportWidth / 8) || Math.abs(velocity) > 0.5) {
       if (delta < 0 && composePageIndex < 2) nextIndex++;
       else if (delta > 0 && composePageIndex > 0) nextIndex--;
     }
@@ -2438,7 +2446,7 @@ export default function HomeScreen({
 
             {/* MESSAGE COMPOSE AREA — swipeable pager (Message → Challenge → Location) */}
             {mode === 'preview' && (() => {
-              const pagerWidth = Math.min(window.innerWidth, 430);
+              const pagerWidth = Math.min(viewportWidth, 430);
               const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
               return (
@@ -2745,7 +2753,8 @@ export default function HomeScreen({
       </div>
 
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: 12 }}>
+      {/* HISTORY / FRIEND SELECTOR — same position */}
+      <div className="history-area" style={{ marginBottom: `calc(var(--safe-bottom) + 24px)` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"
