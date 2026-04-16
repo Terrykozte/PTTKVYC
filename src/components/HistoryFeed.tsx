@@ -611,7 +611,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                   </div>
                 </div>
               )}
-              <div style={{ height: 40 }} />
+              <div style={{ height: 160 }} />
             </div>
           </div>
         );

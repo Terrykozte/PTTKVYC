@@ -2004,7 +2004,7 @@ export default function HomeScreen({
         isChallenge: isChallengePost,
         challengeTag: resolvedSlot
           ? `W${_currentWeekNum} D${dayWithinWeek} - ${resolvedSlot.theme}` : undefined,
-        location: selectedLocation ?? undefined,
+        location: selectedLocation || (finalCaption?.toLowerCase().includes('quận 1') || finalCaption?.toLowerCase().includes('district 1') ? { name: 'Quận 1, HCM', mapX: 45, mapY: 48 } : undefined),
       };
 
       setHistoryItems(prev => [newItem, ...prev]);
@@ -2515,7 +2515,7 @@ export default function HomeScreen({
 
               return (
                 <div style={{
-                  position: 'absolute', bottom: 16, left: 0, width: '100%', zIndex: 10, // Đã hạ bottom từ 36 xuống 16
+                  position: 'absolute', bottom: 135, left: 0, width: '100%', zIndex: 10,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>
                   {/* Pager Viewport */}
@@ -3110,7 +3110,7 @@ export default function HomeScreen({
           }}
         >
           {/* 1. LEFT CORNER: Map icon and Rollcall icons (both overlap, opacity controlled by refs) */}
-          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 60px) + 2px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 60px) + 25px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {/* Map Button (Visible in Calendar/Memories tab) */}
             {/* Map Button (Hiện ra khi ở tab Calendar/Memories) */}
             <button
@@ -3272,7 +3272,7 @@ export default function HomeScreen({
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 60px) + 2px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 60px) + 25px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button
