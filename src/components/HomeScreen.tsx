@@ -2445,7 +2445,7 @@ export default function HomeScreen({
             </button>
 
             {/* MESSAGE COMPOSE AREA — MOVED INSIDE VIEWFINDER FOR 1:1 CONTEXT */}
-            {(mode === 'preview' || mode === 'camera') && (() => {
+            {mode === 'preview' && (() => {
               const pagerWidth = Math.min(viewportWidth, 430);
               const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
@@ -2593,7 +2593,7 @@ export default function HomeScreen({
       </div>
 
       {/* Pagination dots (Only when compose area is visible) */}
-      {(mode === 'preview' || mode === 'camera') && (
+      {mode === 'preview' && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12, marginBottom: 4 }}>
           {[0, 1, 2].map((idx) => (
             <div key={idx} style={{
