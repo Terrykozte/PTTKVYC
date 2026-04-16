@@ -707,8 +707,7 @@ export default function HomeScreen({
   // Camera hardware state
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [cameraIdx, setCameraIdx] = useState(0);
+  const [facingModeState, setFacingModeState] = useState<'user' | 'environment'>('user');
   const [flipNextIsCW, setFlipNextIsCW] = useState(true);
 
   // Preview Mode State
@@ -1407,7 +1406,8 @@ export default function HomeScreen({
   const handleMainPointerDown = (e: React.PointerEvent) => {
     if (!mainSliderRef.current || mode === 'preview' || isChatDetailOpen) return;
     if ((e.target as HTMLElement).closest('.bnav-pill')) return;
-    // Removed mouse-only restriction to enable touch gestures on mobile
+    // Bỏ JS Physics cho thiết bị cảm ứng để tận dụng Native CSS Scroll Snap mượt mà nhất
+    if (e.pointerType !== 'mouse') return;
 
     const el = mainSliderRef.current;
     const vertEl = homeSlideRef.current;
@@ -1667,13 +1667,14 @@ export default function HomeScreen({
   const [bgOpacity, setBgOpacity] = useState(0);
   const bgOverlayRef = useRef<HTMLDivElement>(null);
 
-  const startCamera = async (deviceId?: string) => {
+  const startCamera = async (forceFacing?: 'user' | 'environment') => {
     try {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
+      const targetFacing = forceFacing || facingModeState;
       const constraints = {
-        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' }
+        video: { facingMode: targetFacing }
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
@@ -1687,11 +1688,6 @@ export default function HomeScreen({
 
   useEffect(() => {
     startCamera();
-
-    navigator.mediaDevices.enumerateDevices().then(devs => {
-      const videoDevs = devs.filter(d => d.kind === 'videoinput');
-      setDevices(videoDevs);
-    });
 
     return () => {
       if (streamRef.current) {
@@ -1716,11 +1712,8 @@ export default function HomeScreen({
 
   // Helper to detect if we are using the front camera
   const isFrontCamera = useCallback(() => {
-    if (!streamRef.current) return true;
-    const track = streamRef.current.getVideoTracks()[0];
-    const settings = track.getSettings();
-    return settings.facingMode === 'user' || !settings.facingMode;
-  }, []);
+    return facingModeState === 'user';
+  }, [facingModeState]);
 
   const handleShutter = useCallback(async () => {
     if (!streamRef.current) {
@@ -2203,11 +2196,10 @@ export default function HomeScreen({
 
     // Đợi một khoảng blur (giống iOS) rồi mới switch Hardware Camera 
     setTimeout(() => {
-      if (devices.length > 1) {
-        const nextIdx = (cameraIdx + 1) % devices.length;
-        setCameraIdx(nextIdx);
-        startCamera(devices[nextIdx].deviceId);
-      }
+      const nextFacing = facingModeState === 'user' ? 'environment' : 'user';
+      setFacingModeState(nextFacing);
+      startCamera(nextFacing);
+      
       setFlipKey(prev => prev + 1);
       setFlipNextIsCW(!flipNextIsCW);
     }, 150);
@@ -2215,7 +2207,7 @@ export default function HomeScreen({
     setTimeout(() => {
       setIsCameraFlipping(false);
     }, 550);
-  }, [flipNextIsCW, devices.length, cameraIdx]);
+  }, [flipNextIsCW, facingModeState]);
 
   const flipStyle: React.CSSProperties = flipKey > 0 ? {
     animation: `flipRotate${flipNextIsCW ? 'CCW' : 'CW'} 0.4s cubic-bezier(.4,0,.2,1)`
@@ -2461,7 +2453,7 @@ export default function HomeScreen({
                 top: 0, left: 0,
                 zIndex: 1,
                 opacity: mode === 'preview' ? 0 : 1,
-                transform: 'scaleX(-1)' // Mirror only — zoom is hardware-driven
+                transform: facingModeState === 'user' ? 'scaleX(-1)' : 'none' // Chỉ mirror cho cam trước
               }}
             />
             {/* Focus indicator */}
