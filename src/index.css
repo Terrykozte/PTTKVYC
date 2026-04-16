@@ -1,0 +1,1321 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+:root {
+  --btn-ring: #5bb8f5;
+  --orange-dot: #f0a030;
+  --blue-badge: #1E88E5;
+  --glass: rgba(255, 255, 255, 0.13);
+  --glass-h: rgba(255, 255, 255, 0.22);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050505;
+  font-family: -apple-system, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── PHONE — iPhone 16 Pro Max ── */
+.phone {
+  width: 430px;
+  height: 932px; /* Fixed height for exact 16 Pro Max layout */
+  max-width: 100vw; /* Allow scaling on extremely thin screens */
+  position: relative;
+  overflow: hidden;
+  border-radius: min(55px, 7vw);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-height: 950px) {
+  .phone {
+    transform: scale(calc(100vh / 950));
+    transform-origin: center center;
+  }
+}
+
+/* ── BG GRADIENT ── */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg,
+      var(--bg-top) 0%, 
+      var(--bg-mid) 48%,
+      var(--bg-bottom) 100%);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── DYNAMIC ISLAND ── */
+.island {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 126px;
+  height: 37px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.island::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  background: #34c759;
+  border-radius: 50%;
+}
+
+/* ── STATUS BAR ── */
+.sbar {
+  position: relative;
+  z-index: 20;
+  padding: 17px 32px 0;
+  /* aligned horizontally with Dynamic Island */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sbar-left {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sbar-time {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+}
+
+.sbar-r {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sig {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+}
+
+.sig span {
+  width: 3px;
+  background: #fff;
+  border-radius: 1px;
+  display: block;
+}
+
+.sig span:nth-child(1) {
+  height: 4px;
+}
+
+.sig span:nth-child(2) {
+  height: 7px;
+}
+
+.sig span:nth-child(3) {
+  height: 10px;
+}
+
+.sig span:nth-child(4) {
+  height: 13px;
+}
+
+.s5g {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bat-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: relative;
+  z-index: 20;
+  padding: 30px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 78px;
+  /* Lock height so camera↔preview swap doesn't shift layout */
+}
+
+/* Rollcall megaphone */
+.btn-roll {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  transition: background .15s, transform .1s;
+}
+
+.btn-roll:active {
+  transform: scale(0.91);
+  background: var(--glass-h);
+}
+
+.btn-roll::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 11px;
+  height: 11px;
+  background: var(--orange-dot);
+  border-radius: 50%;
+  border: 2px solid #145580;
+}
+
+/* Friends pill */
+.btn-friends {
+  height: 42px;
+  padding: 0 20px;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .15s, transform .1s;
+}
+
+.btn-friends:active {
+  transform: scale(0.96);
+  background: var(--glass-h);
+}
+
+.btn-friends svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.btn-friends span {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.1px;
+}
+
+/* Avatar */
+.btn-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.36);
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(135deg, #8B7355, #D2B48C);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform .1s;
+}
+
+.btn-avatar:active {
+  transform: scale(0.91);
+}
+
+/* ── VIEWFINDER — inside frame with margins ── */
+.vf-wrap {
+  position: relative;
+  z-index: 20;
+  margin-top: 16px;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.vf {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #080808;
+  border-radius: 40px;
+  /* Slight roundness just to match phone curves */
+  overflow: hidden;
+  position: relative;
+}
+
+.vf::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 35% 30%, rgba(18, 18, 18, .05) 0%, rgba(0, 0, 0, .35) 100%);
+}
+
+.vf-flash-btn {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(6px);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .15s, background .15s;
+}
+
+.vf-flash-btn:active {
+  opacity: .5;
+  background: rgba(0, 0, 0, .6);
+}
+
+.vf-flash-btn svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .6));
+}
+
+.vf-zoom-btn {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(6px);
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+
+.vf-zoom-btn:active {
+  background: rgba(0, 0, 0, .6);
+}
+
+.vf-zoom-btn span {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ── CONTROLS ── */
+.controls {
+  position: relative;
+  z-index: 20;
+  padding: 12px 38px 0;
+  margin-bottom: 8px;
+  /* giảm thêm từ 19px để nâng cụm chọn bạn bẻ lên sát nút gửi hơn */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* Gallery btn */
+.btn-gallery {
+  width: 64px;
+  height: 64px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .1s, opacity .15s;
+}
+
+.btn-gallery:active {
+  transform: scale(0.88);
+  opacity: .7;
+}
+
+/* Shutter */
+.shutter {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.shutter-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3.5px solid var(--btn-ring);
+  box-shadow: 0 0 12px rgba(91, 184, 245, .25);
+}
+
+.shutter-btn {
+  position: absolute;
+  inset: 7px;
+  background: #fff;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, .35);
+  transition: transform .1s;
+}
+
+.shutter-btn:active {
+  transform: scale(0.88);
+}
+
+.shutter-btn.fired {
+  animation: sfire .26s ease-out forwards;
+}
+
+@keyframes sfire {
+  0% {
+    transform: scale(1);
+    background: #fff;
+  }
+
+  35% {
+    transform: scale(0.83);
+    background: #c8d4e8;
+  }
+
+  100% {
+    transform: scale(1);
+    background: #fff;
+  }
+}
+
+/* Flip btn */
+.btn-flip {
+  width: 64px;
+  height: 64px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .15s;
+}
+
+.btn-flip:active {
+  opacity: .65;
+}
+
+/* ── HISTORY ── */
+.history-area {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0 0;
+  flex-shrink: 0;
+  min-height: 56px;
+  /* Lock height so History↔FriendSelector swap doesn't shift */
+}
+
+.btn-history {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+
+.btn-history:active {
+  opacity: .68;
+  transform: scale(0.96);
+}
+
+.hist-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3a5060, #23343e);
+  flex-shrink: 0;
+}
+
+.hist-label {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+}
+
+.hist-chev svg {
+  width: 18px;
+  height: 18px;
+  opacity: .72;
+}
+
+/* spacer — fill remaining space */
+.spacer {
+  flex: 1;
+}
+
+/* ── BOTTOM NAV — compact, smooth transitions ── */
+.bnav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 0 0 26px;
+  /* Tăng padding bottom để đẩy toàn bộ cụm nav lên 1 tí */
+  flex-shrink: 0;
+}
+
+.bnav-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  /* Lighter glass */
+  backdrop-filter: blur(24px) saturate(1.8);
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  /* Container for absolute indicator */
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.nav-indicator {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  z-index: 0;
+  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* Nav item — shared base */
+.nav-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  width: 48px;
+  /* Fixed size for indicator alignment */
+  height: 48px;
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  /* Above indicator */
+}
+
+.nav-item:active {
+  transform: scale(0.85);
+}
+
+/* Active state handled by indicator, but we scale up the icon more */
+.nav-item.active {
+  background: none;
+  transform: scale(1.18);
+  opacity: 1;
+}
+
+/* Inactive nav items shrink slightly */
+.nav-item:not(.active) {
+  opacity: 0.6;
+  transform: scale(0.88);
+}
+
+.nav-item:not(.active):hover {
+  opacity: 0.9;
+  transform: scale(0.96);
+}
+
+/* Yellow dot for new content */
+.nav-dot-new {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  background: #FFD60A;
+  /* iOS system yellow */
+  border-radius: 50%;
+  border: 1px solid #080808;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+/* Blue unread badge */
+.nav-badge-unread {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 17px;
+  height: 18px;
+  background: #007AFF;
+  /* Vibrant iOS blue */
+  border-radius: 9px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #080808;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: badgeBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-badge-unread span {
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@keyframes badgeBounce {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ── FLASH OVERLAY ── */
+.flash-ov {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  transition: opacity .04s;
+}
+
+.flash-ov.on {
+  opacity: 1;
+}
+
+/* ── HOME INDICATOR ── */
+.home-ind {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 5px;
+  background: rgba(255, 255, 255, .3);
+  border-radius: 3px;
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* ── SCREEN ANIMATION ── */
+.screen-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── BOTTOM SHEET MODAL ── */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0, 0, 0, 0.5);
+  animation: backdropIn 0.35s ease-out;
+}
+
+.modal-backdrop.closing {
+  animation: backdropOut 0.3s ease-in forwards;
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.modal-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 44px;
+  /* status bar safe area height */
+  z-index: 5100;
+  background: linear-gradient(180deg,
+      #0c5d5d 0%, #158080 9%, #1a8888 20.5%,
+      #166e6e 32%, #145580 48.2%,
+      #103868 63.1%, #0d2b54 78.4%,
+      #091d3e 90.6%, #06122a 100%);
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sheetSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.modal-sheet.closing {
+  animation: sheetSlideDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheetSlideDown {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Drag handle */
+.drag-handle {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* Settings layout */
+.settings-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 20px 40px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Settings section header */
+.settings-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 28px 0 12px 4px;
+}
+
+/* Settings card group */
+.settings-card {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Settings row */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings-row-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-row-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-row-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.settings-chevron {
+  opacity: 0.35;
+}
+
+/* Profile section */
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 10px;
+}
+
+.profile-avatar-lg {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B7355, #D2B48C);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255, 205, 0, 0.6);
+  margin-bottom: 8px;
+}
+
+.profile-username {
+  font-size: 14px;
+  color: rgba(255, 255, 255, .6);
+  margin-bottom: 14px;
+}
+
+.profile-btns {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-btn {
+  height: 38px;
+  padding: 0 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.profile-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Gold card */
+.gold-card {
+  width: 100%;
+  padding: 16px 18px;
+  background: rgba(255, 205, 0, 0.08);
+  border: 1.5px solid rgba(255, 205, 0, 0.35);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gold-card:active {
+  background: rgba(255, 205, 0, 0.14);
+}
+
+.gold-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gold-card-text strong {
+  color: #FFD700;
+  font-size: 16px;
+  display: block;
+}
+
+.gold-card-text span {
+  color: rgba(255, 255, 255, .55);
+  font-size: 13px;
+}
+
+/* Toggle switch */
+.toggle-track {
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  border: none;
+  padding: 0;
+}
+
+.toggle-track.on {
+  background: #FFD700;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+}
+
+.toggle-track.on .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ── PROFILE SECTION ── */
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 10px;
+}
+
+.profile-btns {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-btn {
+  height: 38px;
+  padding: 0 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.profile-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── LOCKET GOLD BADGE (top-left corner) ── */
+.gold-badge-corner {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  z-index: 5;
+}
+
+/* ── AVATAR WITH GOLD RING ── */
+.avatar-ring-outer {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #FFD700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  padding: 4px;
+  /* gap between ring and avatar */
+}
+
+.avatar-ring-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B7355, #D2B48C);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── PROFILE NAME ── */
+.profile-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+/* ── PROFILE LINK BUTTON ── */
+.profile-link-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: rgba(255, 255, 255, .5);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 16px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.profile-link-btn:active {
+  background: rgba(255, 255, 255, .08);
+}
+
+/* ── GOLD HEART ICON ── */
+.gold-heart-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(255, 205, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── GOLD CARD (highlighted) ── */
+.gold-card {
+  width: 100%;
+  padding: 16px 18px;
+  background: rgba(255, 205, 0, 0.06);
+  border: 2px solid rgba(255, 205, 0, 0.45);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.gold-card:active {
+  background: rgba(255, 205, 0, 0.12);
+}
+
+.gold-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gold-card-text strong {
+  color: #FFD700;
+  font-size: 17px;
+  font-weight: 800;
+  display: block;
+}
+
+.gold-card-text span {
+  color: rgba(255, 255, 255, .45);
+  font-size: 13px;
+}
+
+/* ── WIDGET CARD ── */
+.widget-card-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 0 0 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.widget-card-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.widget-card {
+  width: 130px;
+  min-width: 130px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.widget-card:active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.widget-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 205, 0, 0.5);
+  background: rgba(255, 205, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-card-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .7);
+}
+
+/* ── SHARE SHEET ── */
+.share-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: backdropIn 0.2s ease-out;
+}
+
+.share-sheet {
+  width: 100%;
+  max-width: 430px;
+  background: linear-gradient(180deg, #1a3a3a 0%, #0e2830 100%);
+  border-radius: 16px 16px 0 0;
+  padding: 14px 20px 30px;
+  animation: sheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.share-sheet-handle {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  margin: 0 auto 18px;
+}
+
+.share-sheet-link {
+  font-size: 15px;
+  color: #4da6ff;
+  text-align: center;
+  margin-bottom: 20px;
+  word-break: break-all;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.share-sheet-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.share-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.1s;
+  min-width: 80px;
+}
+
+.share-action-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* ── TOPBAR HEADER ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  width: 100%;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.btn-roll,
+.btn-avatar {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+.btn-roll:active,
+.btn-avatar:active {
+  transform: scale(0.9);
+}
+
+.btn-friends {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 28px;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+}
+
+.btn-friends:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-friends svg {
+  width: 24px;
+  height: 24px;
+}
