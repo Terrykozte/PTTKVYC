@@ -2451,7 +2451,7 @@ export default function HomeScreen({
 
               return (
                 <div style={{
-                  position: 'absolute', bottom: `calc(var(--safe-bottom) + 12px)`, left: 0, width: '100%', zIndex: 10,
+                  position: 'absolute', bottom: 12, left: 0, width: '100%', zIndex: 10,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>
                   {/* Pager Viewport */}
