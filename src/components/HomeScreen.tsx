@@ -1325,6 +1325,12 @@ export default function HomeScreen({
 
   const hwZoomRange = useRef<{ min: number; max: number }>({ min: 0.5, max: 6 });
 
+  // TikTok Header Refs
+  const histTabRef = useRef<HTMLButtonElement>(null);
+  const homeTabRef = useRef<HTMLButtonElement>(null);
+  const chatTabRef = useRef<HTMLButtonElement>(null);
+  const topTabsIndicatorRef = useRef<HTMLDivElement>(null);
+
   const switchTab = (tab: NavTab) => {
     const targetIdx = tabs.indexOf(tab);
 
@@ -2316,11 +2322,41 @@ export default function HomeScreen({
     if (isProgrammaticScroll.current) return;
 
     // REAL-TIME LINKED INDICATOR SYNC
+    const progress = scrollX / width; // 0=History, 1=Home, 2=Chats
+
     if (!mainDragState.current.isDraggingTab) {
-      const progress = scrollX / width;
       if (indicatorRef.current) {
         indicatorRef.current.style.transform = `translateX(${progress * 52}px)`;
       }
+    }
+
+    // TIKTOK HEADER ANIMATION (Interpation between tabs)
+    const updateTabStyle = (ref: React.RefObject<HTMLButtonElement>, tabIdx: number) => {
+      if (!ref.current) return;
+      const dist = Math.abs(progress - tabIdx);
+      const activeP = Math.max(0, 1 - dist); // 1 = fully active, 0 = fully inactive
+      
+      const opacity = 0.5 + activeP * 0.5;
+      const scale = 0.9 + activeP * 0.15;
+      const weight = activeP > 0.8 ? '800' : '700';
+      
+      ref.current.style.opacity = String(opacity);
+      ref.current.style.transform = `scale(${scale})`;
+      ref.current.style.fontWeight = weight;
+      ref.current.style.textShadow = activeP > 0.6 ? '0 0 10px rgba(255,255,255,0.3)' : 'none';
+    };
+
+    updateTabStyle(histTabRef, 0);
+    updateTabStyle(homeTabRef, 1);
+    updateTabStyle(chatTabRef, 2);
+
+    // TOP TAB INDICATOR SLIDE
+    if (topTabsIndicatorRef.current) {
+      // Logic: 0=History, 1=Home, 2=Chats
+      // History is at approx -80px from center, Chats at +80px
+      const indicatorX = (progress - 1) * 85; 
+      topTabsIndicatorRef.current.style.transform = `translateX(${indicatorX}px)`;
+      topTabsIndicatorRef.current.style.opacity = '1';
     }
 
     // (Đã xóa thao tác ép Scroll bằng JS, để Native CSS Scroll Snap tự quyết định điểm dừng 60fps)
@@ -3163,95 +3199,62 @@ export default function HomeScreen({
             pointerEvents: 'none',
             zIndex: 100
           }}>
-            {/* ── DYNAMIC FRIENDS/FILTER PILL ── */}
-            <button
-              ref={friendsBtnRef}
-              className="btn-friends"
-              onClick={() => {
-                if (isChatDetailOpen) return;
-                // Determine if we should open filter or friends screen
-                if (isInHistory && activeTab === 'home') {
-                  setShowHistoryFilterModal(true);
-                } else {
-                  navigateTo('friends');
-                }
-              }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                padding: '0 16px',
-                height: 40,
-                borderRadius: 20,
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(15px)',
-                WebkitBackdropFilter: 'blur(15px)',
-                border: '1.2px solid rgba(255,255,255,0.08)',
-                cursor: isChatDetailOpen ? 'default' : 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.35s cubic-bezier(0.32, 1, 0.67, 1)',
-                opacity: mode === 'preview' ? 0 : 1,
-                pointerEvents: (isChatDetailOpen || mode === 'preview') ? 'none' : 'auto',
-                maxWidth: '65%',
-              }}
-            >
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* 1. "33 Friends" (HOME STATE) */}
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  opacity: (isInHistory || mode === 'preview') ? 0 : 1,
-                  transition: 'opacity 0.3s ease, transform 0.3s ease',
-                  position: (isInHistory || mode === 'preview') ? 'absolute' : 'relative',
-                  transform: (isInHistory || mode === 'preview') ? 'scale(0.85)' : 'scale(1)',
-                  pointerEvents: (isInHistory || mode === 'preview') ? 'none' : 'auto',
-                }}>
-                  <svg viewBox="0 0 24 24" fill="white" width="20" height="20">
-                    <path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5s-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05C16.19 13.9 17 15.02 17 16.5V19h6v-2.5C23 14.17 18.33 13 16 13z" />
-                  </svg>
-                  <span style={{ fontWeight: 800 }}>{MOCK_FRIENDS.length} Friends</span>
-                </span>
+            {/* ── TIKTOK STYLE TOP TABS (History | Locket | Chats) ── */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 24, pointerEvents: 'auto', position: 'relative'
+            }}>
+              <button
+                ref={histTabRef}
+                onClick={() => switchTab('calendar')}
+                style={{
+                  background: 'none', border: 'none', color: 'white', fontSize: 17, 
+                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
+                  willChange: 'transform, opacity'
+                }}
+              >History</button>
+              
+              <button
+                ref={homeTabRef}
+                onClick={() => switchTab('home')}
+                style={{
+                  background: 'none', border: 'none', color: 'white', fontSize: 18, 
+                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
+                  willChange: 'transform, opacity'
+                }}
+              >Locket</button>
 
-                {/* 2. HISTORY FILTER (HISTORY STATE) */}
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 2,
-                  opacity: (isInHistory && mode !== 'preview') ? 1 : 0,
-                  transition: 'opacity 0.3s ease, transform 0.3s ease',
-                  position: (isInHistory && mode !== 'preview') ? 'relative' : 'absolute',
-                  transform: (isInHistory && mode !== 'preview') ? 'scale(1)' : 'scale(0.85)',
-                  pointerEvents: (isInHistory && mode !== 'preview') ? 'auto' : 'none',
-                }}>
-                  <span style={{ fontWeight: 800 }}>{historyFilter}</span>
-                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
-                    <path d="M6 9L12 15L18 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </div>
-            </button>
+              <button
+                ref={chatTabRef}
+                onClick={() => switchTab('chat')}
+                style={{
+                  background: 'none', border: 'none', color: 'white', fontSize: 17, 
+                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
+                  willChange: 'transform, opacity'
+                }}
+              >Chats</button>
 
-            {/* Title Text (Messages, Calendar, etc.) */}
-            <h2
+              {/* TikTok-style Dot Underline */}
+              <div 
+                ref={topTabsIndicatorRef}
+                style={{
+                  position: 'absolute', bottom: -2, left: 'calc(50% - 3px)',
+                  width: 6, height: 6, borderRadius: '50%', background: 'white',
+                  boxShadow: '0 0 8px rgba(255,255,255,0.8)',
+                  pointerEvents: 'none', willChange: 'transform'
+                }}
+              />
+            </div>
+
+            {/* Title text overlay (Secondary title like "Send to..." or "Monthly Recap") */}
+            <h1
               ref={titleTextRef}
               style={{
-                position: 'absolute',
-                margin: 0,
-                fontSize: 19,
-                fontWeight: 800,
-                color: '#fff',
-                letterSpacing: -0.2,
-                textAlign: 'center',
-                whiteSpace: 'nowrap',
-                transformOrigin: 'center center',
-                willChange: 'transform, opacity',
-                opacity: 0,
-                transform: 'scale(0.78)',
-                pointerEvents: 'none',
+                position: 'absolute', color: 'white', fontSize: 20, fontWeight: 800,
+                opacity: 0, pointerEvents: 'none', transition: 'none'
               }}
             >
-              {activeTab === 'chat' ? 'Messages' :
-                activeTab === 'calendar' ? 'Memories' :
-                  mode === 'preview' ? 'Send to...' : ''}
-            </h2>
+              {mode === 'preview' ? (composePageIndex === 0 ? 'Send to...' : (composePageIndex === 1 ? 'Challenges' : 'Location')) : (activeTab === 'calendar' ? 'History' : 'Chats')}
+            </h1>
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
@@ -3361,7 +3364,7 @@ export default function HomeScreen({
       >
         <style>{`
           .hide-scrollbar::-webkit-scrollbar { display: none; }
-          .screen-item { scroll-snap-align: start; flex: 0 0 100%; width: 100%; height: 100%; }
+          .screen-item { scroll-snap-align: center; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-stop: always; }
         `}</style>
 
         {/* 1.1 MEMORIES (LEFT TAB) — Locket-style dot calendar */}
