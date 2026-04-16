@@ -6,12 +6,24 @@ export interface WeekConfig {
   days: string;
 }
 
-export const WEEKS: WeekConfig[] = [
-  { key: 'W1', theme: 'Buổi sáng',  days: 'Ngày 1–7'   },
-  { key: 'W2', theme: 'Thiên nhiên', days: 'Ngày 8–14'  },
-  { key: 'W3', theme: 'Bạn bè',      days: 'Ngày 15–21' },
-  { key: 'W4', theme: 'Ẩm thực',     days: 'Ngày 22–28' },
-];
+export const MONTHLY_THEMES: Record<number, string[]> = {
+  1: ['Hội ngộ', 'Tết sum vầy', 'Gia đình', 'Khai xuân'],
+  2: ['Lãng mạn', 'Valentine', 'Ấm áp', 'Kỷ niệm'],
+  3: ['Vườn hoa', 'Phái đẹp', 'Hương sắc', 'Chào xuân'],
+  4: ['Buổi sáng', 'Thiên nhiên', 'Bạn bè', 'Ẩm thực'],
+  5: ['Du lịch', 'Biển xanh', 'Mùa hè', 'Hoàng hôn'],
+  6: ['Âm nhạc', 'Thể thao', 'Cuối tuần', 'Chill'],
+};
+
+export const getMonthlyChallengeConfig = (month: number): WeekConfig[] => {
+  const themes = MONTHLY_THEMES[month] || MONTHLY_THEMES[4];
+  return [
+    { key: 'W1', theme: themes[0],  days: 'Ngày 1–7'   },
+    { key: 'W2', theme: themes[1],  days: 'Ngày 8–14'  },
+    { key: 'W3', theme: themes[2],  days: 'Ngày 15–21' },
+    { key: 'W4', theme: themes[3],  days: 'Ngày 22–28' },
+  ];
+};
 
 export const WEEK_IMAGES: Record<WeekKey, string> = {
   W1: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',

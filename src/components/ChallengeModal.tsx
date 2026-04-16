@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { type WeekKey, WEEKS, WEEK_IMAGES } from '../mockData';
+import { type WeekKey, getMonthlyChallengeConfig, WEEK_IMAGES } from '../mockData';
 
 type MonthState = 'past' | 'current' | 'future';
 type ViewState = 'months' | 'weeks';
@@ -290,7 +290,7 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                 </div>
               )}
 
-              {WEEKS.map((week) => {
+              {getMonthlyChallengeConfig(selectedMonth).map((week) => {
                 const filledCount = Array.from({ length: 7 }, (_, i) => challengeImages[`M${selectedMonth}-${week.key}-${i}`]).filter(Boolean).length;
 
                 const getWeekState = (key: string): 'locked' | 'active' | 'hidden' => {

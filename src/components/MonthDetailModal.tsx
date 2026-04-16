@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { HistoryItem } from './HomeScreen';
+import { getMonthlyChallengeConfig } from '../mockData';
 
 interface MonthDetailModalProps {
   month: number;
@@ -129,10 +130,12 @@ export default function MonthDetailModal({ month, year, historyItems, challengeI
 
   // Build challenge day map: dayOfMonth → {slotKey, dataUrl}
   const challengeByDay: Record<number, string> = {};
-  const WEEKS_KEYS = ['W1', 'W2', 'W3', 'W4'] as const;
-  WEEKS_KEYS.forEach((wk, wIdx) => {
+  const monthConfig = getMonthlyChallengeConfig(month);
+  
+  monthConfig.forEach((week, wIdx) => {
     for (let d = 0; d < 7; d++) {
-      const slotKey = `${wk}-${d}`;
+      // FIX: Include Month prefix to avoid leakage between months
+      const slotKey = `M${month}-${week.key}-${d}`;
       const img = challengeImages[slotKey];
       if (img) {
         const dayNum = challengeSlotToDay(wIdx, d);

@@ -25,3 +25,4 @@ dist-ssr
 .agent/
 .env
 .env.*
+.vercel

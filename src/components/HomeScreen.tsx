@@ -3,11 +3,12 @@ import type { PickedLocation } from './LocationPickerModal';
 import LocationPickerModal from './LocationPickerModal';
 import MapsArchiveView from './MapsArchiveView';
 
-import { COLLAB_PRIVACY, MOCK_FRIENDS, MOCKED_IDENTITIES, WEEKS } from '../mockData';
+import { COLLAB_PRIVACY, MOCK_FRIENDS, MOCKED_IDENTITIES, getMonthlyChallengeConfig } from '../mockData';
 import ChallengeModal from './ChallengeModal';
 import { type ContextPhoto, type Message } from './ChatDetailScreen';
 import HistoryFeed from './HistoryFeed';
 import MemoryDetailModal from './MemoryDetailModal';
+import MonthDetailModal from './MonthDetailModal';
 import MessagesScreen, { type MessagesScreenHandle } from './MessagesScreen';
 
 const HAS_NEW_CONTENT = true;
@@ -771,7 +772,7 @@ export default function HomeScreen({
   const _currentMonth = _today.getMonth() + 1;
   const _currentDay = _today.getDate();
   const _currentWeekNum = _currentDay <= 7 ? 1 : _currentDay <= 14 ? 2 : _currentDay <= 21 ? 3 : 4;
-  const _currentWeekTheme = WEEKS[_currentWeekNum - 1].theme;
+  const _currentWeekTheme = getMonthlyChallengeConfig(_currentMonth)[_currentWeekNum - 1].theme;
   const _currentDayOfWeek = ((_currentDay - 1) % 7) + 1;
 
   // Missing mock state for preview compose area
@@ -1234,6 +1235,7 @@ export default function HomeScreen({
   const [selectedLocation, setSelectedLocation] = useState<PickedLocation | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [selectedCalendarPhoto, setSelectedCalendarPhoto] = useState<HistoryItem | null>(null);
+  const [showMonthDetail, setShowMonthDetail] = useState<{ month: number; year: number } | null>(null);
 
   // Caption pages — at function scope so handleSend can reference them
   const captionPages = [
@@ -1844,6 +1846,12 @@ export default function HomeScreen({
   ];
   const handleAiCaptionClick = () => {
     if (aiCaptionLoading) return;
+    
+    // 🪄 MAGIC: Pick a random caption and fill immediately if clicking wand
+    const random = AI_CAPTION_POOL[Math.floor(Math.random() * AI_CAPTION_POOL.length)];
+    setMessage(random);
+    
+    // Still show suggestions for more variety
     if (showAiCaptions) { setShowAiCaptions(false); return; }
     setAiCaptionLoading(true);
     setShowAiCaptions(true);
@@ -1852,7 +1860,7 @@ export default function HomeScreen({
       const shuffled = [...AI_CAPTION_POOL].sort(() => Math.random() - 0.5).slice(0, 5);
       setAiCaptionSuggestions(shuffled);
       setAiCaptionLoading(false);
-    }, 900);
+    }, 800);
   };
 
   // Close AI caption panel when swiping away from message page
@@ -2550,14 +2558,15 @@ export default function HomeScreen({
                           </div>
                         )}
 
-                        {/* Input pill + wand button row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {/* Input pill center + Wand button right */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
                           <div style={{
                             background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                            borderRadius: 22, padding: '0 16px', minWidth: 140, maxWidth: '90%', height: 40,
+                            borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
-                            transition: 'border 0.3s'
+                            border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                            transition: 'all 0.3s'
                           }}>
                             <input
                               className="msg-textarea"
@@ -2565,7 +2574,7 @@ export default function HomeScreen({
                               onChange={(e) => setMessage(e.target.value.slice(0, 40))}
                               placeholder="Add a message"
                               style={{
-                                width: message.length > 0 ? `${Math.max(15, message.length + 1)}ch` : '15ch',
+                                width: '100%',
                                 textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
                                 fontSize: 14, fontWeight: 700
                               }}
@@ -2573,12 +2582,16 @@ export default function HomeScreen({
                           </div>
                           <button
                             onClick={handleAiCaptionClick}
+                            className="ai-wand-bounce"
                             style={{
-                              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                              background: showAiCaptions ? 'rgba(255,200,80,0.22)' : 'rgba(255,255,255,0.14)',
-                              border: showAiCaptions ? '1px solid rgba(255,200,80,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                              background: 'rgba(255,255,255,0.15)',
+                              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255,255,255,0.1)',
                               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 17, transition: 'background 0.2s, border 0.2s',
+                              fontSize: 18, transition: 'all 0.2s',
+                              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                              opacity: aiCaptionLoading ? 0.5 : 1,
                             }}
                           >🪄</button>
                         </div>
@@ -3439,8 +3452,8 @@ export default function HomeScreen({
                 <div key={monthNum} style={{ width: '100%', marginBottom: 36, opacity: isFuture ? 0.35 : 1 }}>
                   {/* Month header */}
                   <div
-                    onClick={() => !isFuture && photoCount > 0 && setShowMemoryDetail(true)}
-                    style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10, cursor: (!isFuture && photoCount > 0) ? 'pointer' : 'default' }}
+                    onClick={() => !isFuture && setShowMonthDetail({ month: monthNum, year })}
+                    style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10, cursor: (!isFuture) ? 'pointer' : 'default' }}
                   >
                     <span style={{ color: isCurrent ? '#FFC800' : 'white', fontSize: 20, fontWeight: 900, letterSpacing: -0.5 }}>
                       {MONTH_NAMES[monthNum]}
@@ -3880,6 +3893,18 @@ export default function HomeScreen({
           historyItems={historyItems}
           viewerIdentity={viewerIdentity}
           onClose={() => setSelectedCalendarPhoto(null)}
+        />
+      )}
+
+      {/* ── MONTH DETAIL MODAL ── */}
+      {showMonthDetail && (
+        <MonthDetailModal
+          month={showMonthDetail.month}
+          year={showMonthDetail.year}
+          historyItems={historyItems}
+          challengeImages={challengeImages}
+          viewerIdentity={viewerIdentity}
+          onClose={() => setShowMonthDetail(null)}
         />
       )}
 
