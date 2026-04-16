@@ -2444,164 +2444,170 @@ export default function HomeScreen({
               <span>{zoomLevel}x</span>
             </button>
 
-            {/* MESSAGE COMPOSE AREA — swipeable pager (Message → Challenge → Location) */}
-            {mode === 'preview' && (() => {
-              const pagerWidth = Math.min(viewportWidth, 430);
-              const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
-
-              return (
-                <div style={{
-                  position: 'absolute', bottom: 25, left: 0, width: '100%', zIndex: 10,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                }}>
-                  {/* Pager Viewport */}
-                  <div
-                    onPointerDown={handleComposePointerDown}
-                    onPointerMove={handleComposePointerMove}
-                    onPointerUp={handleComposePointerUp}
-                    onPointerCancel={handleComposePointerUp}
-                    style={{
-                      width: pagerWidth, height: 44, overflow: 'hidden', position: 'relative',
-                      touchAction: 'none', cursor: composeSwipeRef.current.active ? 'grabbing' : 'grab'
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex', width: `${pagerWidth * 3}px`, height: '100%',
-                      transform: `translateX(${trackOffset}px)`,
-                      transition: composeSwipeRef.current.active ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
-                    }}>
-                      {/* PAGE 0: Message */}
-                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                        {/* AI captions suggestions panel */}
-                        {showAiCaptions && (
-                          <div style={{
-                            position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
-                            background: 'rgba(28,28,30,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                            borderRadius: 18, padding: '10px 10px', minWidth: 220,
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                            display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10,
-                          }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 4, letterSpacing: 0.5 }}>
-                              🪄 AI Suggestions
-                            </div>
-                            {aiCaptionLoading ? (
-                              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '10px 0' }}>
-                                {[0,1,2].map(i => (
-                                  <div key={i} style={{
-                                    width: 6, height: 6, borderRadius: '50%',
-                                    background: 'rgba(255,255,255,0.6)',
-                                    animation: `dotPulse 0.9s ease-in-out ${i * 0.2}s infinite`,
-                                  }} />
-                                ))}
-                              </div>
-                            ) : (
-                              aiCaptionSuggestions.map((s, i) => (
-                                <button key={i} onClick={() => { setMessage(s); setShowAiCaptions(false); }} style={{
-                                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)',
-                                  borderRadius: 12, padding: '8px 14px',
-                                  color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                  textAlign: 'left', transition: 'background 0.15s',
-                                }}>{s}</button>
-                              ))
-                            )}
-                          </div>
-                        )}
-
-                        {/* Input pill center + Wand button right */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
-                          <div style={{
-                            background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                            borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                            transition: 'all 0.3s'
-                          }}>
-                            <input
-                              className="msg-textarea"
-                              value={message}
-                              onChange={(e) => setMessage(e.target.value.slice(0, 40))}
-                              placeholder="Add a message"
-                              style={{
-                                width: '100%',
-                                textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
-                                fontSize: 14, fontWeight: 700
-                              }}
-                            />
-                          </div>
-                          <button
-                            onClick={handleAiCaptionClick}
-                            className="ai-wand-bounce"
-                            style={{
-                              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-                              background: 'rgba(255,255,255,0.15)',
-                              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 18, transition: 'all 0.2s',
-                              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                              opacity: aiCaptionLoading ? 0.5 : 1,
-                            }}
-                          >🪄</button>
-                        </div>
-                      </div>
-
-                      {/* PAGE 1: Challenge (auto-computed from today, view-only) */}
-                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <div
-                          onClick={() => {
-                            if (blockComposeClickRef.current) return;
-                            setShowChallengeModal(true); // open for VIEWING only
-                          }}
-                          style={{
-                            background: 'rgba(255,200,0,0.14)',
-                            backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                            borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40,
-                            display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
-                            border: '1px solid rgba(255,200,0,0.3)',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span style={{ color: '#FFC800', fontSize: 14, fontWeight: 800 }}>⚡</span>
-                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {`M${_currentMonth}W${_currentWeekNum}D${_currentDay - (_currentWeekNum - 1) * 7}: ${_currentWeekTheme}`}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* PAGE 2: Location */}
-                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <div
-                          onClick={() => {
-                            if (blockComposeClickRef.current) return;
-                            setShowLocationPicker(true);
-                          }}
-                          style={{
-                            background: selectedLocation ? 'rgba(26,122,94,0.18)' : 'rgba(255,255,255,0.12)',
-                            backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                            borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40, // Dùng max-content để ôm sát chữ
-                            display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
-                            border: selectedLocation ? '1px solid rgba(26,122,94,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <span style={{ fontSize: 14 }}>📍</span>
-                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {selectedLocation ? selectedLocation.name : 'Vị trí'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              );
-            })()}
+            {/* Compose area moved down */}
 
           </div>
         </div>
       </div>
+
+      {/* MESSAGE COMPOSE AREA — REPOSITIONED FOR STANDALONE APP */}
+      {mode === 'preview' && (() => {
+        const pagerWidth = Math.min(viewportWidth, 430);
+        const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
+
+        return (
+          <div style={{
+            position: 'absolute', 
+            top: '65%', // Positioned exactly 'below center' as requested
+            left: 0, width: '100%', zIndex: 100,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            pointerEvents: 'none' // Allow touches to pass through the wrapper
+          }}>
+            {/* Pager Viewport */}
+            <div
+              onPointerDown={handleComposePointerDown}
+              onPointerMove={handleComposePointerMove}
+              onPointerUp={handleComposePointerUp}
+              onPointerCancel={handleComposePointerUp}
+              style={{
+                width: pagerWidth, height: 44, overflow: 'hidden', position: 'relative',
+                touchAction: 'none', cursor: composeSwipeRef.current.active ? 'grabbing' : 'grab',
+                pointerEvents: 'auto' // Re-enable touch for the interactive area
+              }}
+            >
+              <div style={{
+                display: 'flex', width: `${pagerWidth * 3}px`, height: '100%',
+                transform: `translateX(${trackOffset}px)`,
+                transition: composeSwipeRef.current.active ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
+              }}>
+                {/* PAGE 0: Message */}
+                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                  {/* AI captions suggestions panel */}
+                  {showAiCaptions && (
+                    <div style={{
+                      position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
+                      background: 'rgba(28,28,30,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                      borderRadius: 18, padding: '10px 10px', minWidth: 220,
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                      display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10,
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 4, letterSpacing: 0.5 }}>
+                        🪄 AI Suggestions
+                      </div>
+                      {aiCaptionLoading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '10px 0' }}>
+                          {[0,1,2].map(i => (
+                            <div key={i} style={{
+                              width: 6, height: 6, borderRadius: '50%',
+                              background: 'rgba(255,255,255,0.6)',
+                              animation: `dotPulse 0.9s ease-in-out ${i * 0.2}s infinite`,
+                            }} />
+                          ))}
+                        </div>
+                      ) : (
+                        aiCaptionSuggestions.map((s, i) => (
+                          <button key={i} onClick={() => { setMessage(s); setShowAiCaptions(false); }} style={{
+                            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)',
+                            borderRadius: 12, padding: '8px 14px',
+                            color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                            textAlign: 'left', transition: 'background 0.15s',
+                          }}>{s}</button>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Input pill center + Wand button right */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
+                    <div style={{
+                      background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                      borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
+                      display: 'flex', justifyContent: 'center', alignItems: 'center',
+                      border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                      transition: 'all 0.3s'
+                    }}>
+                      <input
+                        className="msg-textarea"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value.slice(0, 40))}
+                        placeholder="Add a message"
+                        style={{
+                          width: '100%',
+                          textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
+                          fontSize: 14, fontWeight: 700
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={handleAiCaptionClick}
+                      className="ai-wand-bounce"
+                      style={{
+                        width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                        background: 'rgba(255,255,255,0.15)',
+                        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18, transition: 'all 0.2s',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                        opacity: aiCaptionLoading ? 0.5 : 1,
+                      }}
+                    >🪄</button>
+                  </div>
+                </div>
+
+                {/* PAGE 1: Challenge */}
+                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <div
+                    onClick={() => {
+                      if (blockComposeClickRef.current) return;
+                      setShowChallengeModal(true);
+                    }}
+                    style={{
+                      background: 'rgba(255,200,0,0.14)',
+                      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                      borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40,
+                      display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+                      border: '1px solid rgba(255,200,0,0.3)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ color: '#FFC800', fontSize: 14, fontWeight: 800 }}>⚡</span>
+                    <span style={{ color: 'white', fontSize: 14, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {`M${_currentMonth}W${_currentWeekNum}D${_currentDay - (_currentWeekNum - 1) * 7}: ${_currentWeekTheme}`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* PAGE 2: Location */}
+                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <div
+                    onClick={() => {
+                      if (blockComposeClickRef.current) return;
+                      setShowLocationPicker(true);
+                    }}
+                    style={{
+                      background: selectedLocation ? 'rgba(26,122,94,0.18)' : 'rgba(255,255,255,0.12)',
+                      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                      borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40,
+                      display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
+                      border: selectedLocation ? '1px solid rgba(26,122,94,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: 14 }}>📍</span>
+                    <span style={{ color: 'white', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {selectedLocation ? selectedLocation.name : 'Vị trí'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        );
+      })()}
 
       {/* Pagination dots (Only in Preview) */}
       {mode === 'preview' && (
