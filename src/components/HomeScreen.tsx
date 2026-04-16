@@ -1650,10 +1650,7 @@ export default function HomeScreen({
         }
         mainSliderRef.current.scrollTo({ left: targetX, behavior: 'smooth' });
       } else {
-        // Just sync if jumping or initial load
-        if (Math.abs(mainSliderRef.current.scrollLeft - targetX) > 0.1) { // Forced sub-pixel align
-          mainSliderRef.current.scrollLeft = targetX;
-        }
+        // Bỏ ép snap bằng JS để giữ nguyên đà vuốt mượt của Native Scroll Snap
         if (forceMidDrag && indicatorRef.current) {
           indicatorRef.current.style.transition = 'none';
           indicatorRef.current.style.transform = `translateX(${targetNavX}px)`;
@@ -2307,20 +2304,8 @@ export default function HomeScreen({
       }
     }
 
-    // DRIFT KILLER (RAF Debounced Alignment)
-    if (!mainDragState.current.isDown && !mainDragState.current.isDraggingTab) {
-      if (mainDragState.current.alignRAF) cancelAnimationFrame(mainDragState.current.alignRAF);
-      mainDragState.current.alignRAF = requestAnimationFrame(() => {
-        if (!mainSliderRef.current) return;
-        const currentP = mainSliderRef.current.scrollLeft / width;
-        const targetIdx = Math.round(currentP);
-        const targetX = targetIdx * width;
-        if (Math.abs(mainSliderRef.current.scrollLeft - targetX) > 0.01 && Math.abs(mainSliderRef.current.scrollLeft - targetX) < 10) {
-          mainSliderRef.current.scrollLeft = targetX;
-        }
-        mainDragState.current.alignRAF = 0;
-      });
-    }
+    // (Đã xóa thao tác ép Scroll bằng JS, để Native CSS Scroll Snap tự quyết định điểm dừng 60fps)
+
 
     const idx = Math.round(scrollX / width);
     if (tabs[idx] && tabs[idx] !== activeTab) {
