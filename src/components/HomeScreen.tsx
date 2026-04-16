@@ -1407,7 +1407,7 @@ export default function HomeScreen({
   const handleMainPointerDown = (e: React.PointerEvent) => {
     if (!mainSliderRef.current || mode === 'preview' || isChatDetailOpen) return;
     if ((e.target as HTMLElement).closest('.bnav-pill')) return;
-    if (e.pointerType !== 'mouse') return;
+    // Removed mouse-only restriction to enable touch gestures on mobile
 
     const el = mainSliderRef.current;
     const vertEl = homeSlideRef.current;
@@ -3341,9 +3341,7 @@ export default function HomeScreen({
         ref={mainSliderRef}
         onScroll={handleSliderScroll}
         onPointerDown={(e) => {
-          // Only activate custom drag physics for mouse
-          // Touch devices use native scroll + snap for smoothness
-          if (e.pointerType !== 'mouse') return;
+          // Custom gesture engine now handles both mouse and touch for premium smoothness
           handleMainPointerDown(e);
         }}
         onTouchStart={() => {
@@ -3359,9 +3357,8 @@ export default function HomeScreen({
           display: 'flex', overflowX: (isChatDetailOpen || mode === 'preview') ? 'hidden' : 'auto',
           scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', zIndex: 50,
           paddingBottom: 0,
-          // Allow native horizontal pan on touch → smooth mobile swipe
-          // Mouse uses custom drag engine via onPointerDown (touchAction: none would block it)
-          touchAction: (isChatDetailOpen || mode === 'preview') ? 'none' : 'pan-x',
+          // Allow native horizontal and vertical gestures while maintaining focus
+          touchAction: (isChatDetailOpen || mode === 'preview') ? 'none' : 'pan-x pan-y',
           scrollSnapType: 'x mandatory'
         }}
         className="hide-scrollbar"
@@ -3563,7 +3560,7 @@ export default function HomeScreen({
             overflowY: mode === 'preview' ? 'hidden' : 'auto',
             overflowX: 'hidden',
             scrollSnapType: 'y mandatory',
-            touchAction: mode === 'preview' ? 'none' : 'pan-y',
+            touchAction: mode === 'preview' ? 'none' : 'pan-x pan-y',
             WebkitOverflowScrolling: 'touch',
             pointerEvents: activeTab === 'home' ? 'auto' : 'none'
           }}
