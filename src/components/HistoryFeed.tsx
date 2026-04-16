@@ -379,72 +379,88 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                 </div>
               )}
 
-              {/* Pill */}
-              {!(item.collabStatus === 'pending' && isMeAuthor) && (
-                <div
-                  onClick={(e) => {
-                    if (hasCollabs) {
-                      e.stopPropagation();
-                      setActiveCollabDetailId(activeCollabDetailId === item.id ? null : item.id);
-                    }
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12, cursor: hasCollabs ? 'pointer' : 'default',
-                    background: 'rgba(255,255,255,0.12)', padding: '6px 18px 6px 6px', borderRadius: 24,
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    zIndex: activeCollabDetailId === item.id ? 15000 : 1,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)'
-                  }}
-                >
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%', background: isMeAuthor ? '#FFD700' : item.senderColor,
-                    backgroundImage: getIdentity(item.sender).avatar ? `url(${getIdentity(item.sender).avatar})` : undefined,
-                    backgroundSize: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.3)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                  }}>
-                    {!getIdentity(item.sender).avatar && (
-                      <span style={{ fontSize: 16, fontWeight: 900, color: isMeAuthor ? '#000' : '#fff' }}>
-                        {(isMeAuthor ? 'You' : item.sender)[0]}
+              {/* Pill - Consolidated Single Line View */}
+              {!(item.collabStatus === 'pending' && isMeAuthor) && (() => {
+                const authorDisplay = isMeAuthor ? 'You' : (!!item.anonymousCollab && !isFriend(item.sender) ? 'Someone' : item.sender);
+                const allParticipants = [
+                  { 
+                    id: 'author', 
+                    name: item.sender, 
+                    displayName: authorDisplay, 
+                    avatar: getIdentity(item.sender).avatar, 
+                    color: isMeAuthor ? '#FFD700' : item.senderColor 
+                  },
+                  ...sortedPartners
+                ];
+
+                return (
+                  <div
+                    onClick={(e) => {
+                      if (hasCollabs) {
+                        e.stopPropagation();
+                        setActiveCollabDetailId(activeCollabDetailId === item.id ? null : item.id);
+                      }
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, cursor: hasCollabs ? 'pointer' : 'default',
+                      background: 'rgba(255,255,255,0.12)', padding: '5px 14px 5px 6px', borderRadius: 24,
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      zIndex: activeCollabDetailId === item.id ? 15000 : 1,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)'
+                    }}
+                  >
+                    {/* AVATAR STACK */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {allParticipants.slice(0, 3).map((p, pIdx) => (
+                        <div
+                          key={p.id || p.name}
+                          style={{
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: p.color || (p as any).displayColor,
+                            backgroundImage: (p.avatar || (p as any).displayAvatar) ? `url(${p.avatar || (p as any).displayAvatar})` : undefined,
+                            backgroundSize: 'cover', border: '1.5px solid rgba(255,255,255,0.3)',
+                            marginLeft: pIdx === 0 ? 0 : -8,
+                            zIndex: 10 - pIdx,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          {!(p.avatar || (p as any).displayAvatar) && (
+                            <span style={{ fontSize: 11, fontWeight: 900, color: p.name === viewerIdentity ? '#000' : '#fff' }}>
+                              {(p.displayName || p.name)[0]}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* NAMES & TIME */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, maxWidth: 200, overflow: 'hidden' }}>
+                      <span style={{ 
+                        color: '#fff', fontSize: 14, fontWeight: 800, 
+                        whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' 
+                      }}>
+                        {allParticipants.map(p => p.displayName || (p as any).name).join(', ')}
                       </span>
+                      <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, fontWeight: 600 }}>•</span>
+                      <span style={{ 
+                        color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700, 
+                        whiteSpace: 'nowrap' 
+                      }}>
+                        {item.time}
+                      </span>
+                    </div>
+
+                    {hasCollabs && item.collabStatus !== 'accepted' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 2 }}>
+                        <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
+                        <span style={{ color: '#FFC800', fontSize: 11, fontWeight: 800 }}>+ collab</span>
+                      </div>
                     )}
                   </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center' }}>
-                      {item.collabStatus === 'accepted' ? (
-                        <>
-                          <span>You</span>
-                          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 5px', fontSize: 13, fontWeight: 600 }}>+</span>
-                          <span>{isMeAuthor ? (partners[partners.length - 1]?.name || 'Partner') : item.sender}</span>
-                        </>
-                      ) : (
-                        isMeAuthor ? 'You' : (!!item.anonymousCollab && !isFriend(item.sender) ? 'Someone' : item.sender)
-                      )}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700 }}>{item.time}</span>
-                  </div>
-
-                  {hasCollabs && item.collabStatus !== 'accepted' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 700 }}>with</span>
-                      <div style={{
-                        width: 26, height: 26, borderRadius: '50%', background: sortedPartners[0].displayColor,
-                        border: '1.5px solid rgba(0,0,0,0.3)', zIndex: 10,
-                        backgroundImage: sortedPartners[0].displayAvatar ? `url(${sortedPartners[0].displayAvatar})` : undefined,
-                        backgroundSize: 'cover', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
-                      }}>
-                        {sortedPartners[0].isAnonymous && <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" /></svg>}
-                        {!sortedPartners[0].isAnonymous && !sortedPartners[0].displayAvatar && <span style={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>{sortedPartners[0].name[0]}</span>}
-                      </div>
-                      {sortedPartners.length > 1 && (
-                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 700 }}>...</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
