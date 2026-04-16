@@ -36,24 +36,39 @@ body {
   justify-content: center;
 }
 
-/* ── PHONE — iPhone 16 Pro Max ── */
+/* ── PHONE — Fluid & Responsive Container ── */
 .phone {
-  width: 430px;
-  height: 932px;
-  height: 100dvh; /* Use dynamic viewport height for mobile responsiveness */
-  max-width: 100vw; /* Allow scaling on extremely thin screens */
+  width: 100%;
+  max-width: 500px; /* Centered fixed width for Desktop/Showcase */
+  height: 100dvh; /* Dynamic viewport height for real mobile browsers */
   position: relative;
   overflow: hidden;
-  border-radius: min(55px, 7vw);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px rgba(0, 0, 0, 0.92);
   display: flex;
   flex-direction: column;
+  background: #000;
+  
+  /* Desktop/Large screen styling */
+  border-radius: 50px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px rgba(0, 0, 0, 0.92);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (max-height: 950px) {
+/* Mobile Breakpoint: Edge-to-edge native look */
+@media (max-width: 500px) {
   .phone {
-    transform: scale(calc(100vh / 950));
-    transform-origin: center center;
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  /* Hide Mock System UI on real phones to avoid overlap with native UI */
+  .island, .sbar {
+    display: none !important;
+  }
+
+  /* Adjust topbar padding when mock status bar is hidden */
+  .topbar {
+    padding-top: 15px !important;
   }
 }
 

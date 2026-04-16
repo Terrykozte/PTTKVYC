@@ -645,6 +645,21 @@ export default function HomeScreen({
   const [flashOv, setFlashOv] = useState(false);
 
   const [flipKey, setFlipKey] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(window.innerWidth > 500 ? 500 : window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (mainSliderRef.current) {
+        setContainerWidth(mainSliderRef.current.getBoundingClientRect().width);
+      } else {
+        setContainerWidth(window.innerWidth > 500 ? 500 : window.innerWidth);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial measure
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     if (forceTab) return forceTab;
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -2478,7 +2493,7 @@ export default function HomeScreen({
 
             {/* MESSAGE COMPOSE AREA — swipeable pager (Message → Challenge → Location) */}
             {mode === 'preview' && (() => {
-              const pagerWidth = 350;
+              const pagerWidth = containerWidth * 0.85; // Use 85% of container width for the pager
               const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
               return (
