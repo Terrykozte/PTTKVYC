@@ -556,7 +556,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                                 key={em}
                                 onClick={(e) => {
                                   const ctx = makeContext();
-                                  handleSendSticker(item.sender, em, ctx);
+                                  handleSendTextMessage(item.sender, em, ctx);
                                   setHistoryStickerPickerId(null);
                                   spawnBubble(em, e.currentTarget);
                                 }}
