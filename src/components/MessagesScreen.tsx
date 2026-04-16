@@ -226,11 +226,7 @@ const MessagesScreen = forwardRef<
     gesture.current.lastX  = e.clientX;
     gesture.current.lastTime = now;
 
-    let rawProg = 1 - dx / w;
-    if (rawProg > 1) {
-      rawProg = 1 + rubberBand(rawProg - 1, 0.8) * 0.25;
-    }
-    rawProg = Math.max(0, rawProg);
+    const rawProg = Math.max(0, Math.min(1, 1 - dx / w));
 
     e.stopPropagation();
 
