@@ -2451,7 +2451,7 @@ export default function HomeScreen({
 
               return (
                 <div style={{
-                  position: 'absolute', bottom: 12, left: 0, width: '100%', zIndex: 10,
+                  position: 'absolute', bottom: 25, left: 0, width: '100%', zIndex: 10,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                 }}>
                   {/* Pager Viewport */}
@@ -2754,7 +2754,8 @@ export default function HomeScreen({
 
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: `calc(var(--safe-bottom) + 24px)` }}>
+      {/* HISTORY / FRIEND SELECTOR — same position */}
+      <div className="history-area" style={{ marginBottom: 0, paddingBottom: `var(--safe-bottom)` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"

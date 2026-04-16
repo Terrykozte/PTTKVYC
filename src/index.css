@@ -398,7 +398,7 @@ body {
 .controls {
   position: relative;
   z-index: 20;
-  padding: 12px 38px calc(var(--safe-bottom) + 70px);
+  padding: 12px 38px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
