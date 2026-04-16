@@ -3093,7 +3093,6 @@ export default function HomeScreen({
         )}
       </div>
     </>
-  );
 
   return (
     <>
@@ -3199,14 +3198,16 @@ export default function HomeScreen({
             </button>
           </div>
 
-          {/* 2. CENTER PIECE: Perfectly Centered Pill & Title */}
+            {/* 2. CENTER PIECE: Perfectly Centered Pill & Title */}
           <div style={{
             flex: 1,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             position: 'absolute',
-            left: 0, right: 0, top: 40, height: 60,
+            left: 0, right: 0, 
+            top: 'calc(env(safe-area-inset-top, 15px) + 24px)', 
+            height: 60,
             pointerEvents: 'none',
             zIndex: 100
           }}>
@@ -3269,7 +3270,12 @@ export default function HomeScreen({
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: 40, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ 
+            pointerEvents: isChatDetailOpen ? 'none' : 'auto', 
+            position: 'absolute', right: 20, 
+            top: 'calc(env(safe-area-inset-top, 15px) + 24px)', 
+            height: 60, display: 'flex', alignItems: 'center', zIndex: 200 
+          }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button
@@ -4828,6 +4834,60 @@ export default function HomeScreen({
           })()}
         </div>
       )}
+      {/* ── BOTTOM NAVIGATION PILL (History | Home | Chat) ── */}
+      <div style={{
+        position: 'absolute',
+        bottom: 'calc(env(safe-area-inset-bottom, 12px) + 20px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        pointerEvents: (isChatDetailOpen || isHistoryFeedOpen || mode === 'preview') ? 'none' : 'auto',
+        opacity: (isChatDetailOpen || isHistoryFeedOpen || mode === 'preview') ? 0 : 1,
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        display: 'flex'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+          borderRadius: 32, padding: '6px 8px',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          display: 'flex', alignItems: 'center', gap: 4,
+          boxShadow: '0 15px 35px rgba(0,0,0,0.4)'
+        }}>
+          {['calendar', 'home', 'chat'].map((tab, i) => {
+            const isActive = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => switchTab(tab as NavTab)}
+                style={{
+                  width: 52, height: 44, borderRadius: 24,
+                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  cursor: 'pointer', transition: 'all 0.3s'
+                }}
+              >
+                {tab === 'calendar' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? "white" : "rgba(255,255,255,0.5)"}>
+                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/>
+                  </svg>
+                )}
+                {tab === 'home' && (
+                  <div style={{ 
+                    width: 24, height: 24, borderRadius: '50%', 
+                    border: `2.5px solid ${isActive ? 'white' : 'rgba(255,255,255,0.5)'}` 
+                  }} />
+                )}
+                {tab === 'chat' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? "white" : "rgba(255,255,255,0.5)"}>
+                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

@@ -59,6 +59,8 @@ body {
     max-width: 100%;
     border-radius: 0;
     box-shadow: none;
+    /* Ensure height is exactly dynamic viewport height without subpixel gaps */
+    height: 100dvh; 
   }
   
   /* Hide Mock System UI on real phones to avoid overlap with native UI */
@@ -66,9 +68,9 @@ body {
     display: none !important;
   }
 
-  /* Adjust topbar padding when mock status bar is hidden */
+  /* Adjust topbar padding using Safe Area for modern phones (Notch/Dynamic Island) */
   .topbar {
-    padding-top: 15px !important;
+    padding-top: env(safe-area-inset-top, 44px) !important;
   }
 }
 
