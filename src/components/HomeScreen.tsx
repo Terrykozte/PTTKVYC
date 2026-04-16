@@ -2451,7 +2451,7 @@ export default function HomeScreen({
       </div>
 
       {/* MESSAGE COMPOSE AREA — REPOSITIONED FOR STANDALONE APP */}
-      {mode === 'preview' && (() => {
+      {(mode === 'preview' || mode === 'camera') && (() => {
         const pagerWidth = Math.min(viewportWidth, 430);
         const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
