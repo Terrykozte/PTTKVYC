@@ -3,13 +3,13 @@ import type { PickedLocation } from './LocationPickerModal';
 import LocationPickerModal from './LocationPickerModal';
 import MapsArchiveView from './MapsArchiveView';
 
-import { COLLAB_PRIVACY, MOCK_FRIENDS, MOCKED_IDENTITIES, getMonthlyChallengeConfig } from '../mockData';
+import { COLLAB_PRIVACY, getMonthlyChallengeConfig, MOCK_FRIENDS, MOCKED_IDENTITIES } from '../mockData';
 import ChallengeModal from './ChallengeModal';
 import { type ContextPhoto, type Message } from './ChatDetailScreen';
 import HistoryFeed from './HistoryFeed';
 import MemoryDetailModal from './MemoryDetailModal';
-import MonthDetailModal from './MonthDetailModal';
 import MessagesScreen, { type MessagesScreenHandle } from './MessagesScreen';
+import MonthDetailModal from './MonthDetailModal';
 
 const HAS_NEW_CONTENT = true;
 const UNREAD_MESSAGES = 1;
@@ -1502,7 +1502,7 @@ export default function HomeScreen({
       // — HORIZONTAL DRAG —
       // Relying on native scroll-snap for horizontal tabs.
       // JS-drag is disabled to prevent "free-scrolling" feel.
-      
+
       // — VERTICAL DRAG —
       // Also relying on native scroll-snap for history paging.
     };
@@ -1632,17 +1632,17 @@ export default function HomeScreen({
   const bgOverlayRef = useRef<HTMLDivElement>(null);
 
   const startCamera = async (forceFacing?: 'user' | 'environment') => {
-    if (isCameraFlipping && !forceFacing) return; 
+    if (isCameraFlipping && !forceFacing) return;
     try {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       const targetFacing = forceFacing || facingModeState;
       const constraints = {
-        video: { 
+        video: {
           facingMode: { ideal: targetFacing },
           width: { ideal: 1080 },
-          height: { ideal: 1080 } 
+          height: { ideal: 1080 }
         }
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -1808,11 +1808,11 @@ export default function HomeScreen({
   ];
   const handleAiCaptionClick = () => {
     if (aiCaptionLoading) return;
-    
+
     // 🪄 MAGIC: Pick a random caption and fill immediately if clicking wand
     const random = AI_CAPTION_POOL[Math.floor(Math.random() * AI_CAPTION_POOL.length)];
     setMessage(random);
-    
+
     // Still show suggestions for more variety
     if (showAiCaptions) { setShowAiCaptions(false); return; }
     setAiCaptionLoading(true);
@@ -2168,7 +2168,7 @@ export default function HomeScreen({
       const nextFacing = facingModeState === 'user' ? 'environment' : 'user';
       setFacingModeState(nextFacing);
       startCamera(nextFacing);
-      
+
       setFlipKey(prev => prev + 1);
       setFlipNextIsCW(!flipNextIsCW);
     }, 150);
@@ -2444,178 +2444,161 @@ export default function HomeScreen({
               <span>{zoomLevel}x</span>
             </button>
 
-            {/* Compose area moved down */}
+            {/* MESSAGE COMPOSE AREA — MOVED INSIDE VIEWFINDER FOR 1:1 CONTEXT */}
+            {(mode === 'preview' || mode === 'camera') && (() => {
+              const pagerWidth = Math.min(viewportWidth, 430);
+              const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
+
+              return (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 12, // Fixed at bottom of the 1:1 square
+                  left: 0, width: '100%', zIndex: 100,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  pointerEvents: 'none'
+                }}>
+                  {/* Pager Viewport */}
+                  <div
+                    onPointerDown={handleComposePointerDown}
+                    onPointerMove={handleComposePointerMove}
+                    onPointerUp={handleComposePointerUp}
+                    onPointerCancel={handleComposePointerUp}
+                    style={{
+                      width: pagerWidth, height: 44, overflow: 'hidden', position: 'relative',
+                      touchAction: 'none', cursor: composeSwipeRef.current.active ? 'grabbing' : 'grab',
+                      pointerEvents: 'auto'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex', width: `${pagerWidth * 3}px`, height: '100%',
+                      transform: `translateX(${trackOffset}px)`,
+                      transition: composeSwipeRef.current.active ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
+                    }}>
+                      {/* PAGE 0: Message */}
+                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                        {/* AI captions suggestions panel */}
+                        {showAiCaptions && (
+                          <div style={{
+                            position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
+                            background: 'rgba(28,28,30,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                            borderRadius: 18, padding: '10px 10px', minWidth: 220,
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                            display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10,
+                          }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 4, letterSpacing: 0.5 }}>
+                              🪄 AI Suggestions
+                            </div>
+                            {aiCaptionLoading ? (
+                              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '10px 0' }}>
+                                {[0,1,2].map(i => (
+                                  <div key={i} style={{
+                                    width: 6, height: 6, borderRadius: '50%',
+                                    background: 'rgba(255,255,255,0.6)',
+                                    animation: `dotPulse 0.9s ease-in-out ${i * 0.2}s infinite`,
+                                  }} />
+                                ))}
+                              </div>
+                            ) : (
+                              aiCaptionSuggestions.map((s, i) => (
+                                <button key={i} onClick={() => { setMessage(s); setShowAiCaptions(false); }} style={{
+                                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)',
+                                  borderRadius: 12, padding: '8px 14px',
+                                  color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                  textAlign: 'left', transition: 'background 0.15s',
+                                }}>{s}</button>
+                              ))
+                            )}
+                          </div>
+                        )}
+
+                        {/* Input pill center + Wand button right */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
+                          <div style={{
+                            background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                            borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                            transition: 'all 0.3s'
+                          }}>
+                            <input
+                              className="msg-textarea"
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value.slice(0, 40))}
+                              placeholder="Add a message"
+                              style={{
+                                width: '100%',
+                                textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
+                                fontSize: 14, fontWeight: 700
+                              }}
+                            />
+                          </div>
+                          <button
+                            onClick={handleAiCaptionClick}
+                            className="ai-wand-bounce"
+                            style={{
+                              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                              background: 'rgba(255,255,255,0.15)',
+                              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 18, transition: 'all 0.2s',
+                              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                              opacity: aiCaptionLoading ? 0.5 : 1,
+                            }}
+                          >🪄</button>
+                        </div>
+                      </div>
+
+                      {/* PAGE 1: Challenge */}
+                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <div
+                          onClick={() => navigateTo('challenge')}
+                          style={{
+                            background: 'rgba(255,100,100,0.2)', padding: '6px 16px', borderRadius: 20,
+                            display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                            border: composePageIndex === 1 ? '1px solid rgba(255,140,140,0.4)' : '1px solid transparent',
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>🎯</span>
+                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800 }}>Challenge</span>
+                        </div>
+                      </div>
+
+                      {/* PAGE 2: Location */}
+                      <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <div
+                          onClick={() => setShowLocationPicker(true)}
+                          style={{
+                            background: 'rgba(100,150,255,0.2)', padding: '6px 16px', borderRadius: 20,
+                            display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                            border: composePageIndex === 2 ? '1px solid rgba(140,180,255,0.4)' : '1px solid transparent',
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>📍</span>
+                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {selectedLocation ? selectedLocation.name : 'Vị trí'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
         </div>
       </div>
 
-      {/* MESSAGE COMPOSE AREA — REPOSITIONED FOR STANDALONE APP */}
-      {(mode === 'preview' || mode === 'camera') && (() => {
-        const pagerWidth = Math.min(viewportWidth, 430);
-        const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
-
-        return (
-          <div style={{
-            position: 'absolute', 
-            top: '65%', // Positioned exactly 'below center' as requested
-            left: 0, width: '100%', zIndex: 100,
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            pointerEvents: 'none' // Allow touches to pass through the wrapper
-          }}>
-            {/* Pager Viewport */}
-            <div
-              onPointerDown={handleComposePointerDown}
-              onPointerMove={handleComposePointerMove}
-              onPointerUp={handleComposePointerUp}
-              onPointerCancel={handleComposePointerUp}
-              style={{
-                width: pagerWidth, height: 44, overflow: 'hidden', position: 'relative',
-                touchAction: 'none', cursor: composeSwipeRef.current.active ? 'grabbing' : 'grab',
-                pointerEvents: 'auto' // Re-enable touch for the interactive area
-              }}
-            >
-              <div style={{
-                display: 'flex', width: `${pagerWidth * 3}px`, height: '100%',
-                transform: `translateX(${trackOffset}px)`,
-                transition: composeSwipeRef.current.active ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
-              }}>
-                {/* PAGE 0: Message */}
-                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                  {/* AI captions suggestions panel */}
-                  {showAiCaptions && (
-                    <div style={{
-                      position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
-                      background: 'rgba(28,28,30,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                      borderRadius: 18, padding: '10px 10px', minWidth: 220,
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                      display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10,
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 4, letterSpacing: 0.5 }}>
-                        🪄 AI Suggestions
-                      </div>
-                      {aiCaptionLoading ? (
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '10px 0' }}>
-                          {[0,1,2].map(i => (
-                            <div key={i} style={{
-                              width: 6, height: 6, borderRadius: '50%',
-                              background: 'rgba(255,255,255,0.6)',
-                              animation: `dotPulse 0.9s ease-in-out ${i * 0.2}s infinite`,
-                            }} />
-                          ))}
-                        </div>
-                      ) : (
-                        aiCaptionSuggestions.map((s, i) => (
-                          <button key={i} onClick={() => { setMessage(s); setShowAiCaptions(false); }} style={{
-                            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)',
-                            borderRadius: 12, padding: '8px 14px',
-                            color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                            textAlign: 'left', transition: 'background 0.15s',
-                          }}>{s}</button>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {/* Input pill center + Wand button right */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
-                    <div style={{
-                      background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                      borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
-                      display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                      transition: 'all 0.3s'
-                    }}>
-                      <input
-                        className="msg-textarea"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value.slice(0, 40))}
-                        placeholder="Add a message"
-                        style={{
-                          width: '100%',
-                          textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
-                          fontSize: 14, fontWeight: 700
-                        }}
-                      />
-                    </div>
-                    <button
-                      onClick={handleAiCaptionClick}
-                      className="ai-wand-bounce"
-                      style={{
-                        width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-                        background: 'rgba(255,255,255,0.15)',
-                        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18, transition: 'all 0.2s',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                        opacity: aiCaptionLoading ? 0.5 : 1,
-                      }}
-                    >🪄</button>
-                  </div>
-                </div>
-
-                {/* PAGE 1: Challenge */}
-                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <div
-                    onClick={() => {
-                      if (blockComposeClickRef.current) return;
-                      setShowChallengeModal(true);
-                    }}
-                    style={{
-                      background: 'rgba(255,200,0,0.14)',
-                      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                      borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40,
-                      display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
-                      border: '1px solid rgba(255,200,0,0.3)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <span style={{ color: '#FFC800', fontSize: 14, fontWeight: 800 }}>⚡</span>
-                    <span style={{ color: 'white', fontSize: 14, fontWeight: 800, letterSpacing: -0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {`M${_currentMonth}W${_currentWeekNum}D${_currentDay - (_currentWeekNum - 1) * 7}: ${_currentWeekTheme}`}
-                    </span>
-                  </div>
-                </div>
-
-                {/* PAGE 2: Location */}
-                <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <div
-                    onClick={() => {
-                      if (blockComposeClickRef.current) return;
-                      setShowLocationPicker(true);
-                    }}
-                    style={{
-                      background: selectedLocation ? 'rgba(26,122,94,0.18)' : 'rgba(255,255,255,0.12)',
-                      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                      borderRadius: 22, padding: '0 20px', width: 'max-content', maxWidth: '90%', height: 40,
-                      display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center',
-                      border: selectedLocation ? '1px solid rgba(26,122,94,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <span style={{ fontSize: 14 }}>📍</span>
-                    <span style={{ color: 'white', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {selectedLocation ? selectedLocation.name : 'Vị trí'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        );
-      })()}
-
-      {/* Pagination dots (Only in Preview) */}
-      {mode === 'preview' && (
+      {/* Pagination dots (Only when compose area is visible) */}
+      {(mode === 'preview' || mode === 'camera') && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12, marginBottom: 4 }}>
-          {[0, 1, 2, 3, 4, 5, 6].map((idx) => (
+          {[0, 1, 2].map((idx) => (
             <div key={idx} style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: idx === 0 ? 'white' : 'rgba(255,255,255,0.3)',
+              background: idx === composePageIndex ? 'white' : 'rgba(255,255,255,0.3)',
               transition: 'all 0.3s'
             }} />
           ))}
@@ -2757,13 +2740,11 @@ export default function HomeScreen({
           )}
         </button>
       </div>
-      {mode === 'preview' && <div style={{ height: 16, flexShrink: 0 }} />}
-
 
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: 0, paddingBottom: mode === 'camera' ? `calc(120px + var(--safe-bottom))` : `var(--safe-bottom)` }}>
+      <div className="history-area" style={{ marginBottom: 0, paddingBottom: `calc(120px + var(--safe-bottom))` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"
@@ -3035,7 +3016,7 @@ export default function HomeScreen({
           top: 0,
           left: 0,
           right: 0,
-          height: 160, 
+          height: 160,
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0) 100%)',
           transition: 'opacity 0.3s ease',
           pointerEvents: 'none'
@@ -3991,7 +3972,7 @@ export default function HomeScreen({
                       <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5 }}>
                         Viewed · {totalViewCount}
                       </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.25)"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.25)"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" /></svg>
                     </div>
 
                     {viewedFriends.length === 0 && collabNonFriends.length === 0 && (
@@ -4044,7 +4025,7 @@ export default function HomeScreen({
                             identity={f}
                             time=""
                             isSent
-                            onReply={() => {}}
+                            onReply={() => { }}
                           />
                         ))}
                       </>
