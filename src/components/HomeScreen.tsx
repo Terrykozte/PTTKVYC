@@ -3089,8 +3089,8 @@ export default function HomeScreen({
           top: 0,
           left: 0,
           right: 0,
-          height: 130, // Slightly reduced to match the unblocked items but keep a smooth fade
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0) 100%)',
+          height: 160, 
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0) 100%)',
           transition: 'opacity 0.3s ease',
           pointerEvents: 'none'
         }} />
@@ -3110,7 +3110,7 @@ export default function HomeScreen({
           }}
         >
           {/* 1. LEFT CORNER: Map icon and Rollcall icons (both overlap, opacity controlled by refs) */}
-          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 50px) - 10px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ position: 'absolute', left: 20, top: `calc(env(safe-area-inset-top, 60px) + 2px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {/* Map Button (Visible in Calendar/Memories tab) */}
             {/* Map Button (Hiện ra khi ở tab Calendar/Memories) */}
             <button
@@ -3272,7 +3272,7 @@ export default function HomeScreen({
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 50px) - 10px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
+          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: `calc(env(safe-area-inset-top, 60px) + 2px)`, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button

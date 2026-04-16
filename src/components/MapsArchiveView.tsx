@@ -205,7 +205,7 @@ export default function MapsArchiveView({ historyItems, viewerIdentity, onClose,
           )}
 
           {/* Header — solid frosted-glass pill, top: 16 */}
-          <div style={{ position: 'absolute', top: 16, left: 12, right: 12, zIndex: 1200 }}>
+          <div style={{ position: 'absolute', top: `calc(18px + env(safe-area-inset-top, 40px))`, left: 12, right: 12, zIndex: 1200 }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               background: 'rgba(8,12,22,0.92)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',

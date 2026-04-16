@@ -76,7 +76,7 @@ body {
   }
 
   .topbar {
-    padding-top: calc(10px + env(safe-area-inset-top, 40px)) !important;
+    padding-top: 0 !important;
   }
 }
 
