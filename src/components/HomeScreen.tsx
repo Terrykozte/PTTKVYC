@@ -3672,7 +3672,7 @@ export default function HomeScreen({
         <button
           onClick={() => setShowGridModal(true)}
           style={{
-            position: 'absolute', left: 20, bottom: `calc(var(--safe-bottom) + 4px)`, zIndex: 2,
+            position: 'absolute', left: 20, bottom: `calc(var(--safe-bottom) - 8px)`, zIndex: 2,
             background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', padding: 8,
             borderRadius: '50%',
             opacity: isInHistory && activeTab === 'home' ? 1 : 0,
@@ -3696,7 +3696,7 @@ export default function HomeScreen({
         <button
           onClick={() => setShowSharePanel(true)}
           style={{
-            position: 'absolute', right: 20, bottom: `calc(var(--safe-bottom) + 4px)`, zIndex: 2,
+            position: 'absolute', right: 20, bottom: `calc(var(--safe-bottom) - 8px)`, zIndex: 2,
             background: 'none', border: 'none', cursor: 'pointer', padding: 8,
             opacity: isInHistory && activeTab === 'home' ? 1 : 0,
             transform: isInHistory && activeTab === 'home' ? 'scale(1)' : 'scale(0.7)',
