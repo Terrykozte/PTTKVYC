@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useFriendStore } from '../FriendContext';
+import { MOCK_FRIENDS } from '../mockData';
 
 const Chevron = () => (
   <svg className="settings-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -60,7 +60,17 @@ function ShareSheet({ link, onClose }: { link: string; onClose: () => void }) {
 }
 
 export default function SettingsScreen({ onClose }: { onClose: () => void }) {
-  const { friends, myPrivacySettings, setPrivacy } = useFriendStore();
+  const [friends] = useState(MOCK_FRIENDS);
+  const [myPrivacySettings, setMyPrivacySettings] = useState({
+    anonymousCollab: false,
+    hideCollab: false,
+    readReceipts: true
+  });
+  
+  const setPrivacy = (key: string, val: boolean) => {
+    setMyPrivacySettings(prev => ({ ...prev, [key]: val }));
+  };
+
   const [goldBadge, setGoldBadge] = useState(false);
   const { anonymousCollab, hideCollab, readReceipts } = myPrivacySettings;
   const [showShare, setShowShare] = useState(false);

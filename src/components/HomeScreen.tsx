@@ -2197,6 +2197,7 @@ export default function HomeScreen({
 
   // Flip: alternates hardware camera and CCW/CW animation
   const handleFlip = useCallback(() => {
+    if (isCameraFlipping) return;
     // Bật animation Flip Camera mượt mà 
     setIsCameraFlipping(true);
 
@@ -3606,11 +3607,12 @@ export default function HomeScreen({
                     ...i,
                     collabStatus: 'accepted' as const,
                     collabPartners: [
+                      ...(i.collabPartners || []),
                       {
-                        name: i.collabInviter || i.sender,
-                        color: i.collabInviterColor || i.senderColor,
-                        avatar: i.collabInviterAvatar || `https://i.pravatar.cc/100?img=16`,
-                        sendTo: i.sendTo || [],
+                        name: 'You',
+                        color: '#FFD700',
+                        avatar: undefined, // Will be filled by getIdentity
+                        sendTo: ['all'],
                       },
                     ],
                   }

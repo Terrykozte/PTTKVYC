@@ -215,28 +215,36 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                 {item.collabStatus === 'pending' && !isMeAuthor && (
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%)',
+                    background: 'linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.85) 100%)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                    padding: 24, zIndex: 12,
+                    padding: 20, zIndex: 12,
+                    animation: 'fadeIn 0.3s ease-out'
                   }}>
                     <div style={{
-                      background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)',
-                      borderRadius: 24, padding: 20, border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'rgba(30, 30, 30, 0.75)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+                      borderRadius: 32, padding: 20, border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                         <div style={{
-                          width: 42, height: 42, borderRadius: '50%',
+                          width: 48, height: 48, borderRadius: '50%',
                           backgroundColor: item.collabInviterColor || item.senderColor,
                           backgroundImage: item.collabInviterAvatar ? `url(${item.collabInviterAvatar})` : undefined,
                           backgroundSize: 'cover', flexShrink: 0,
-                          border: '2px solid rgba(255,255,255,0.2)',
-                        }} />
+                          border: '2.5px solid #FFC800', padding: 2
+                        }}>
+                           {!item.collabInviterAvatar && (
+                             <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                               <span style={{ fontSize: 18, fontWeight: 900, color: 'white' }}>{(item.collabInviter || item.sender)[0]}</span>
+                             </div>
+                           )}
+                        </div>
                         <div>
-                          <div style={{ color: '#fff', fontSize: 15, fontWeight: 800 }}>
-                            {item.collabInviter || item.sender} invited you to collab
+                          <div style={{ color: '#fff', fontSize: 16, fontWeight: 800 }}>
+                            Collab Request
                           </div>
-                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, marginTop: 2 }}>
-                            {item.time}
+                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, marginTop: 1 }}>
+                            {item.collabInviter || item.sender} wants to join this post
                           </div>
                         </div>
                       </div>
@@ -244,18 +252,18 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeclineCollab?.(item.id); }}
                           style={{
-                            flex: 1, padding: '12px 0', borderRadius: 16,
-                            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
-                            color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+                            flex: 1, height: 50, borderRadius: 25,
+                            background: 'rgba(255,255,255,0.08)', border: 'none',
+                            color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
                           }}
                         >Decline</button>
                         <button
                           onClick={(e) => { e.stopPropagation(); onAcceptCollab?.(item.id); }}
                           style={{
-                            flex: 1, padding: '12px 0', borderRadius: 16,
-                            background: '#FFB800', border: 'none',
+                            flex: 1, height: 50, borderRadius: 25,
+                            background: '#FFC800', border: 'none',
                             color: '#000', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-                            boxShadow: '0 4px 16px rgba(255,184,0,0.3)',
+                            boxShadow: '0 8px 24px rgba(255,200,0,0.25)',
                           }}
                         >Accept</button>
                       </div>
@@ -404,13 +412,21 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 800 }}>
-                      {isMeAuthor ? 'You' : (!!item.anonymousCollab && !isFriend(item.sender) ? 'Someone' : item.sender)}
+                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center' }}>
+                      {item.collabStatus === 'accepted' ? (
+                        <>
+                          <span>You</span>
+                          <span style={{ color: 'rgba(255,255,255,0.35)', margin: '0 5px', fontSize: 13, fontWeight: 600 }}>+</span>
+                          <span>{isMeAuthor ? (partners[partners.length - 1]?.name || 'Partner') : item.sender}</span>
+                        </>
+                      ) : (
+                        isMeAuthor ? 'You' : (!!item.anonymousCollab && !isFriend(item.sender) ? 'Someone' : item.sender)
+                      )}
                     </span>
                     <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700 }}>{item.time}</span>
                   </div>
 
-                  {hasCollabs && (
+                  {hasCollabs && item.collabStatus !== 'accepted' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
                       <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 700 }}>with</span>
                       <div style={{

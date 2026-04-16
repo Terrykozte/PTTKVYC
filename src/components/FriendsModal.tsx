@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
-import { useFriendStore } from '../FriendContext';
+import { MOCK_FRIENDS } from '../mockData';
 
 export default function FriendsModal({ onClose: _onClose }: { onClose: () => void }) {
-  const { friends, removeFriend } = useFriendStore();
+  const [friends, setFriends] = useState(MOCK_FRIENDS);
+  const removeFriend = (id: string) => setFriends(prev => prev.filter(f => f.id !== id));
   const [searchFocused, setSearchFocused] = useState(false);
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [searchText, setSearchText] = useState('');
