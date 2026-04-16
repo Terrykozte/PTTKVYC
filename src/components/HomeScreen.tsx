@@ -2744,7 +2744,7 @@ export default function HomeScreen({
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: 0, paddingBottom: `calc(120px + var(--safe-bottom))` }}>
+      <div className="history-area" style={{ marginBottom: 0, paddingBottom: mode === 'camera' ? `calc(165px + var(--safe-bottom))` : `var(--safe-bottom)` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"
