@@ -2331,7 +2331,7 @@ export default function HomeScreen({
     }
 
     // TIKTOK HEADER ANIMATION (Interpation between tabs)
-    const updateTabStyle = (ref: React.RefObject<HTMLButtonElement>, tabIdx: number) => {
+    const updateTabStyle = (ref: React.RefObject<HTMLButtonElement | null>, tabIdx: number) => {
       if (!ref.current) return;
       const dist = Math.abs(progress - tabIdx);
       const activeP = Math.max(0, 1 - dist); // 1 = fully active, 0 = fully inactive
