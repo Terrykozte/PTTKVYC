@@ -2452,7 +2452,7 @@ export default function HomeScreen({
               return (
                 <div style={{
                   position: 'absolute',
-                  bottom: 12, // Fixed at bottom of the 1:1 square
+                  bottom: 50, // Higher position within the 1:1 square as requested
                   left: 0, width: '100%', zIndex: 100,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   pointerEvents: 'none'
@@ -2516,7 +2516,7 @@ export default function HomeScreen({
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
                           <div style={{
                             background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                            borderRadius: 22, padding: '0 16px', flex: 1, maxWidth: 300, height: 42,
+                            borderRadius: 24, padding: '0 20px', flex: 1, maxWidth: 300, height: 48,
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
                             border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
                             boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
@@ -2530,7 +2530,7 @@ export default function HomeScreen({
                               style={{
                                 width: '100%',
                                 textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
-                                fontSize: 14, fontWeight: 700
+                                fontSize: 16, fontWeight: 800
                               }}
                             />
                           </div>
@@ -2538,12 +2538,12 @@ export default function HomeScreen({
                             onClick={handleAiCaptionClick}
                             className="ai-wand-bounce"
                             style={{
-                              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                              width: 48, height: 48, borderRadius: 14, flexShrink: 0,
                               background: 'rgba(255,255,255,0.15)',
                               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
                               border: '1px solid rgba(255,255,255,0.1)',
                               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 18, transition: 'all 0.2s',
+                              fontSize: 20, transition: 'all 0.2s',
                               boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
                               opacity: aiCaptionLoading ? 0.5 : 1,
                             }}
