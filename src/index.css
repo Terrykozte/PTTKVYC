@@ -1,14 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  --safe-top: 54px;   /* Consistent simulated notch height */
-  --safe-bottom: 50px; /* Increased from 34px to lift higher */
+  /* Default: Desktop Simulation Values */
+  --safe-top: 54px;
+  --safe-bottom: 50px;
   --bg-top: #0b5182;
   --bg-mid: #0b5283;
   --bg-bottom: #092c43;
   --glass: rgba(255, 255, 255, 0.12);
   --glass-h: rgba(255, 255, 255, 0.22);
   --orange-dot: #ff4d00;
+  --btn-ring: #5bb8f5;
+  --blue-badge: #1E88E5;
 }
 
 *,
@@ -19,14 +22,6 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-}
-
-:root {
-  --btn-ring: #5bb8f5;
-  --orange-dot: #f0a030;
-  --blue-badge: #1E88E5;
-  --glass: rgba(255, 255, 255, 0.13);
-  --glass-h: rgba(255, 255, 255, 0.22);
 }
 
 html,
@@ -73,6 +68,12 @@ body {
 
 /* ── NATIVE MOBILE EXPERIENCE ── */
 @media (max-width: 600px) {
+  :root {
+    /* Use real device hardware values on mobile */
+    --safe-top: env(safe-area-inset-top, 47px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+  }
+
   .phone {
     width: 100%;
     height: 100dvh; /* Fullscreen only on mobile */
