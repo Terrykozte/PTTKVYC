@@ -645,21 +645,6 @@ export default function HomeScreen({
   const [flashOv, setFlashOv] = useState(false);
 
   const [flipKey, setFlipKey] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(window.innerWidth > 500 ? 500 : window.innerWidth);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (mainSliderRef.current) {
-        setContainerWidth(mainSliderRef.current.getBoundingClientRect().width);
-      } else {
-        setContainerWidth(window.innerWidth > 500 ? 500 : window.innerWidth);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial measure
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     if (forceTab) return forceTab;
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -1325,12 +1310,6 @@ export default function HomeScreen({
 
   const hwZoomRange = useRef<{ min: number; max: number }>({ min: 0.5, max: 6 });
 
-  // TikTok Header Refs
-  const histTabRef = useRef<HTMLButtonElement>(null);
-  const homeTabRef = useRef<HTMLButtonElement>(null);
-  const chatTabRef = useRef<HTMLButtonElement>(null);
-  const topTabsIndicatorRef = useRef<HTMLDivElement>(null);
-
   const switchTab = (tab: NavTab) => {
     const targetIdx = tabs.indexOf(tab);
 
@@ -1428,8 +1407,9 @@ export default function HomeScreen({
   const handleMainPointerDown = (e: React.PointerEvent) => {
     if (!mainSliderRef.current || mode === 'preview' || isChatDetailOpen) return;
     if ((e.target as HTMLElement).closest('.bnav-pill')) return;
-    // Bỏ JS Physics cho thiết bị cảm ứng để tận dụng Native CSS Scroll Snap mượt mà nhất
-    if (e.pointerType !== 'mouse') return;
+    // Enabling JS Physics for all pointer types to ensure smooth 'Native-App' feel with custom spring snapping
+    // if (e.pointerType !== 'mouse') return; // Removed to allow JS engine on touch 
+
 
     const el = mainSliderRef.current;
     const vertEl = homeSlideRef.current;
@@ -1558,16 +1538,38 @@ export default function HomeScreen({
         let targetIndex = Math.max(0, Math.min(tabs.length - 1, startIndex + step));
         const targetX = targetIndex * width;
 
+        // CUSTOM SPRING-LIKE SMOOTH SNAP 
         isProgrammaticScroll.current = true;
+        
+        const duration = 450;
+        const startTime = performance.now();
+        const startX = currentScroll;
+        
+        const animate = (now: number) => {
+          const elapsed = now - startTime;
+          const p = Math.min(1, elapsed / duration);
+          // Quintic ease-out curve for premium "gentle" feel
+          const ease = 1 - Math.pow(1 - p, 5);
+          
+          if (mainSliderRef.current) {
+            mainSliderRef.current.scrollLeft = startX + (targetX - startX) * ease;
+          }
+          
+          if (p < 1) {
+            mainDragState.current.raf = requestAnimationFrame(animate);
+          } else {
+            isProgrammaticScroll.current = false;
+            setActiveTab(tabs[targetIndex]);
+            restoreScrollers();
+          }
+        };
+        mainDragState.current.raf = requestAnimationFrame(animate);
+        
         if (indicatorRef.current) {
-          indicatorRef.current.style.transition = 'transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)';
+          indicatorRef.current.style.transition = `transform ${duration}ms cubic-bezier(0.23, 1, 0.32, 1)`;
           indicatorRef.current.style.transform = `translateX(${targetIndex * 52}px)`;
         }
-        mainSliderRef.current.scrollTo({ left: targetX, behavior: 'smooth' });
-        setTimeout(() => {
-          isProgrammaticScroll.current = false;
-          setActiveTab(tabs[targetIndex]);
-        }, 400);
+        return; // Early return to avoid default restoreScrollers below
       }
 
       // — SNAP VERTICAL —
@@ -1690,13 +1692,18 @@ export default function HomeScreen({
   const bgOverlayRef = useRef<HTMLDivElement>(null);
 
   const startCamera = async (forceFacing?: 'user' | 'environment') => {
+    if (isCameraFlipping && !forceFacing) return; 
     try {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       const targetFacing = forceFacing || facingModeState;
       const constraints = {
-        video: { facingMode: targetFacing }
+        video: { 
+          facingMode: { ideal: targetFacing },
+          width: { ideal: 1080 },
+          height: { ideal: 1080 } 
+        }
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
@@ -1704,7 +1711,7 @@ export default function HomeScreen({
         videoRef.current.srcObject = stream;
       }
     } catch (e) {
-      console.warn("Camera access denied or no hardware available", e);
+      console.warn("Camera hardware sync failed", e);
     }
   };
 
@@ -2008,18 +2015,7 @@ export default function HomeScreen({
       setTimeout(() => {
         setFlashOn(false);
         setFired(false);
-        if (flashOn) {
-          setFlashOv(true);
-        } else {
-          // Alternative subtle 'shutter pulse' if flash is off
-          if (bgOverlayRef.current) {
-            bgOverlayRef.current.style.transition = 'opacity 0.1s';
-            bgOverlayRef.current.style.opacity = '0.5';
-            setTimeout(() => { 
-              if (bgOverlayRef.current) bgOverlayRef.current.style.opacity = '0';
-            }, 100);
-          }
-        }
+        setFlashOv(true);
 
         setTimeout(() => {
           setFlashOv(false);
@@ -2333,41 +2329,11 @@ export default function HomeScreen({
     if (isProgrammaticScroll.current) return;
 
     // REAL-TIME LINKED INDICATOR SYNC
-    const progress = scrollX / width; // 0=History, 1=Home, 2=Chats
-
     if (!mainDragState.current.isDraggingTab) {
+      const progress = scrollX / width;
       if (indicatorRef.current) {
         indicatorRef.current.style.transform = `translateX(${progress * 52}px)`;
       }
-    }
-
-    // TIKTOK HEADER ANIMATION (Interpation between tabs)
-    const updateTabStyle = (ref: React.RefObject<HTMLButtonElement | null>, tabIdx: number) => {
-      if (!ref.current) return;
-      const dist = Math.abs(progress - tabIdx);
-      const activeP = Math.max(0, 1 - dist); // 1 = fully active, 0 = fully inactive
-      
-      const opacity = 0.5 + activeP * 0.5;
-      const scale = 0.9 + activeP * 0.15;
-      const weight = activeP > 0.8 ? '800' : '700';
-      
-      ref.current.style.opacity = String(opacity);
-      ref.current.style.transform = `scale(${scale})`;
-      ref.current.style.fontWeight = weight;
-      ref.current.style.textShadow = activeP > 0.6 ? '0 0 10px rgba(255,255,255,0.3)' : 'none';
-    };
-
-    updateTabStyle(histTabRef, 0);
-    updateTabStyle(homeTabRef, 1);
-    updateTabStyle(chatTabRef, 2);
-
-    // TOP TAB INDICATOR SLIDE
-    if (topTabsIndicatorRef.current) {
-      // Logic: 0=History, 1=Home, 2=Chats
-      // History is at approx -80px from center, Chats at +80px
-      const indicatorX = (progress - 1) * 85; 
-      topTabsIndicatorRef.current.style.transform = `translateX(${indicatorX}px)`;
-      topTabsIndicatorRef.current.style.opacity = '1';
     }
 
     // (Đã xóa thao tác ép Scroll bằng JS, để Native CSS Scroll Snap tự quyết định điểm dừng 60fps)
@@ -2540,7 +2506,7 @@ export default function HomeScreen({
 
             {/* MESSAGE COMPOSE AREA — swipeable pager (Message → Challenge → Location) */}
             {mode === 'preview' && (() => {
-              const pagerWidth = containerWidth * 0.85; // Use 85% of container width for the pager
+              const pagerWidth = 350;
               const trackOffset = -(composePageIndex * pagerWidth) + composeDragX;
 
               return (
@@ -3199,84 +3165,110 @@ export default function HomeScreen({
             </button>
           </div>
 
-            {/* 2. CENTER PIECE: Perfectly Centered Pill & Title */}
+          {/* 2. CENTER PIECE: Perfectly Centered Pill & Title */}
           <div style={{
             flex: 1,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             position: 'absolute',
-            left: 0, right: 0, 
-            top: 'calc(env(safe-area-inset-top, 15px) + 24px)', 
-            height: 60,
+            left: 0, right: 0, top: 40, height: 60,
             pointerEvents: 'none',
             zIndex: 100
           }}>
-            {/* ── TIKTOK STYLE TOP TABS (History | Locket | Chats) ── */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 24, pointerEvents: 'auto', position: 'relative'
-            }}>
-              <button
-                ref={histTabRef}
-                onClick={() => switchTab('calendar')}
-                style={{
-                  background: 'none', border: 'none', color: 'white', fontSize: 17, 
-                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
-                  willChange: 'transform, opacity'
-                }}
-              >History</button>
-              
-              <button
-                ref={homeTabRef}
-                onClick={() => switchTab('home')}
-                style={{
-                  background: 'none', border: 'none', color: 'white', fontSize: 18, 
-                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
-                  willChange: 'transform, opacity'
-                }}
-              >Locket</button>
-
-              <button
-                ref={chatTabRef}
-                onClick={() => switchTab('chat')}
-                style={{
-                  background: 'none', border: 'none', color: 'white', fontSize: 17, 
-                  padding: '8px 4px', cursor: 'pointer', outline: 'none', transition: 'text-shadow 0.2s',
-                  willChange: 'transform, opacity'
-                }}
-              >Chats</button>
-
-              {/* TikTok-style Dot Underline */}
-              <div 
-                ref={topTabsIndicatorRef}
-                style={{
-                  position: 'absolute', bottom: -2, left: 'calc(50% - 3px)',
-                  width: 6, height: 6, borderRadius: '50%', background: 'white',
-                  boxShadow: '0 0 8px rgba(255,255,255,0.8)',
-                  pointerEvents: 'none', willChange: 'transform'
-                }}
-              />
-            </div>
-
-            {/* Title text overlay (Secondary title like "Send to..." or "Monthly Recap") */}
-            <h1
-              ref={titleTextRef}
+            {/* ── DYNAMIC FRIENDS/FILTER PILL ── */}
+            <button
+              ref={friendsBtnRef}
+              className="btn-friends"
+              onClick={() => {
+                if (isChatDetailOpen) return;
+                // Determine if we should open filter or friends screen
+                if (isInHistory && activeTab === 'home') {
+                  setShowHistoryFilterModal(true);
+                } else {
+                  navigateTo('friends');
+                }
+              }}
               style={{
-                position: 'absolute', color: 'white', fontSize: 20, fontWeight: 800,
-                opacity: 0, pointerEvents: 'none', transition: 'none'
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                padding: '0 16px',
+                height: 40,
+                borderRadius: 20,
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(15px)',
+                WebkitBackdropFilter: 'blur(15px)',
+                border: '1.2px solid rgba(255,255,255,0.08)',
+                cursor: isChatDetailOpen ? 'default' : 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.35s cubic-bezier(0.32, 1, 0.67, 1)',
+                opacity: mode === 'preview' ? 0 : 1,
+                pointerEvents: (isChatDetailOpen || mode === 'preview') ? 'none' : 'auto',
+                maxWidth: '65%',
               }}
             >
-              {mode === 'preview' ? (composePageIndex === 0 ? 'Send to...' : (composePageIndex === 1 ? 'Challenges' : 'Location')) : (activeTab === 'calendar' ? 'History' : 'Chats')}
-            </h1>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* 1. "33 Friends" (HOME STATE) */}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  opacity: (isInHistory || mode === 'preview') ? 0 : 1,
+                  transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  position: (isInHistory || mode === 'preview') ? 'absolute' : 'relative',
+                  transform: (isInHistory || mode === 'preview') ? 'scale(0.85)' : 'scale(1)',
+                  pointerEvents: (isInHistory || mode === 'preview') ? 'none' : 'auto',
+                }}>
+                  <svg viewBox="0 0 24 24" fill="white" width="20" height="20">
+                    <path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5s-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05C16.19 13.9 17 15.02 17 16.5V19h6v-2.5C23 14.17 18.33 13 16 13z" />
+                  </svg>
+                  <span style={{ fontWeight: 800 }}>{MOCK_FRIENDS.length} Friends</span>
+                </span>
+
+                {/* 2. HISTORY FILTER (HISTORY STATE) */}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 2,
+                  opacity: (isInHistory && mode !== 'preview') ? 1 : 0,
+                  transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  position: (isInHistory && mode !== 'preview') ? 'relative' : 'absolute',
+                  transform: (isInHistory && mode !== 'preview') ? 'scale(1)' : 'scale(0.85)',
+                  pointerEvents: (isInHistory && mode !== 'preview') ? 'auto' : 'none',
+                }}>
+                  <span style={{ fontWeight: 800 }}>{historyFilter}</span>
+                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                    <path d="M6 9L12 15L18 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </div>
+            </button>
+
+            {/* Title Text (Messages, Calendar, etc.) */}
+            <h2
+              ref={titleTextRef}
+              style={{
+                position: 'absolute',
+                margin: 0,
+                fontSize: 19,
+                fontWeight: 800,
+                color: '#fff',
+                letterSpacing: -0.2,
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                transformOrigin: 'center center',
+                willChange: 'transform, opacity',
+                opacity: 0,
+                transform: 'scale(0.78)',
+                pointerEvents: 'none',
+              }}
+            >
+              {activeTab === 'chat' ? 'Messages' :
+                activeTab === 'calendar' ? 'Memories' :
+                  mode === 'preview' ? 'Send to...' : ''}
+            </h2>
           </div>
 
           {/* 3. RIGHT CORNER: Avatar */}
-          <div style={{ 
-            pointerEvents: isChatDetailOpen ? 'none' : 'auto', 
-            position: 'absolute', right: 20, 
-            top: 'calc(env(safe-area-inset-top, 15px) + 24px)', 
-            height: 60, display: 'flex', alignItems: 'center', zIndex: 200 
-          }}>
+          <div style={{ pointerEvents: isChatDetailOpen ? 'none' : 'auto', position: 'absolute', right: 20, top: 40, height: 60, display: 'flex', alignItems: 'center', zIndex: 200 }}>
             {mode === 'preview' ? (
               imageSource !== 'gallery' && (
                 <button
@@ -3382,7 +3374,7 @@ export default function HomeScreen({
       >
         <style>{`
           .hide-scrollbar::-webkit-scrollbar { display: none; }
-          .screen-item { scroll-snap-align: center; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-stop: always; }
+          .screen-item { scroll-snap-align: start; flex: 0 0 100%; width: 100%; height: 100%; }
         `}</style>
 
         {/* 1.1 MEMORIES (LEFT TAB) — Locket-style dot calendar */}
@@ -4835,60 +4827,6 @@ export default function HomeScreen({
           })()}
         </div>
       )}
-      {/* ── BOTTOM NAVIGATION PILL (History | Home | Chat) ── */}
-      <div style={{
-        position: 'absolute',
-        bottom: 'calc(env(safe-area-inset-bottom, 12px) + 20px)',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        pointerEvents: (isChatDetailOpen || isInHistory || mode === 'preview') ? 'none' : 'auto',
-        opacity: (isChatDetailOpen || isInHistory || mode === 'preview') ? 0 : 1,
-        transition: 'opacity 0.3s ease, transform 0.3s ease',
-        display: 'flex'
-      }}>
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
-          borderRadius: 32, padding: '6px 8px',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          display: 'flex', alignItems: 'center', gap: 4,
-          boxShadow: '0 15px 35px rgba(0,0,0,0.4)'
-        }}>
-          {['calendar', 'home', 'chat'].map((tab, i) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => switchTab(tab as NavTab)}
-                style={{
-                  width: 52, height: 44, borderRadius: 24,
-                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  cursor: 'pointer', transition: 'all 0.3s'
-                }}
-              >
-                {tab === 'calendar' && (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? "white" : "rgba(255,255,255,0.5)"}>
-                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/>
-                  </svg>
-                )}
-                {tab === 'home' && (
-                  <div style={{ 
-                    width: 24, height: 24, borderRadius: '50%', 
-                    border: `2.5px solid ${isActive ? 'white' : 'rgba(255,255,255,0.5)'}` 
-                  }} />
-                )}
-                {tab === 'chat' && (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill={isActive ? "white" : "rgba(255,255,255,0.5)"}>
-                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
-                  </svg>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </>
   );
 }

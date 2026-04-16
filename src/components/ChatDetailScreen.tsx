@@ -497,10 +497,11 @@ export default function ChatDetailScreen(props: {
       const container = scrollRef.current;
       const elTop = el.offsetTop;
       
-      // Scroll to a position where the message is near the top (below the header)
-      // instead of center, to prevent large empty gaps at the top.
+      // Use a smaller offset (around the header height) to keep the message visible
+      // without creating a huge void at the top, especially on smaller screens.
+      const offset = showSearch ? 100 : 130;
       container.scrollTo({
-        top: elTop - 130, 
+        top: elTop - offset, 
         behavior: 'smooth'
       });
     }
@@ -1039,13 +1040,13 @@ export default function ChatDetailScreen(props: {
           style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: hideHeader ? 40 : (showSearch ? 90 : 130), // Giảm khoảng trống phía trên khi search
-            paddingBottom: showSearch ? 60 : 10, // Tăng khoảng trống bên dưới để tin nhắn cuối không bị che mất bởi thanh search
+            paddingTop: hideHeader ? 40 : (showSearch ? 85 : 130), // Tối ưu padding-top để giảm khoảng trống khi search
+            paddingBottom: showSearch ? 80 : 10, // Đảm bảo input bar không che mất tin nhắn cuối
             paddingLeft: 0,
             paddingRight: 0,
             display: 'flex',
             flexDirection: 'column',
-            transition: 'all 0.3s ease',
+            transition: 'all 0.4s cubic-bezier(0.19, 1, 0.22, 1)',
             overflowX: 'hidden'
           }}
         >

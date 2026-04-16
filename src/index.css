@@ -36,41 +36,24 @@ body {
   justify-content: center;
 }
 
-/* ── PHONE — Fluid & Responsive Container ── */
+/* ── PHONE — iPhone 16 Pro Max ── */
 .phone {
-  width: 100%;
-  max-width: 500px; /* Centered fixed width for Desktop/Showcase */
-  height: 100dvh; /* Dynamic viewport height for real mobile browsers */
+  width: 430px;
+  height: 932px;
+  height: 100dvh; /* Use dynamic viewport height for mobile responsiveness */
+  max-width: 100vw; /* Allow scaling on extremely thin screens */
   position: relative;
   overflow: hidden;
+  border-radius: min(55px, 7vw);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px rgba(0, 0, 0, 0.92);
   display: flex;
   flex-direction: column;
-  background: #000;
-  
-  /* Desktop/Large screen styling */
-  border-radius: 50px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px rgba(0, 0, 0, 0.92);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Mobile Breakpoint: Edge-to-edge native look */
-@media (max-width: 500px) {
+@media (max-height: 950px) {
   .phone {
-    max-width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-    /* Ensure height is exactly dynamic viewport height without subpixel gaps */
-    height: 100dvh; 
-  }
-  
-  /* Hide Mock System UI on real phones to avoid overlap with native UI */
-  .island, .sbar {
-    display: none !important;
-  }
-
-  /* Adjust topbar padding using Safe Area for modern phones (Notch/Dynamic Island) */
-  .topbar {
-    padding-top: env(safe-area-inset-top, 44px) !important;
+    transform: scale(calc(100vh / 950));
+    transform-origin: center center;
   }
 }
 
