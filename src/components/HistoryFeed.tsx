@@ -200,7 +200,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
             ref={idx === 0 ? historyFeedRef : undefined}
             style={{
               width: '100%',
-              height: '100dvh',
+              height: '100%',
               flex: 'none',
               scrollSnapAlign: 'start',
               scrollSnapStop: 'always',

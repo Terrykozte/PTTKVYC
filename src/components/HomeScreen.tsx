@@ -3500,7 +3500,7 @@ export default function HomeScreen({
           }}
         >
           {/* ── PAGE 1: Camera / Home ── */}
-          <div className="screen-item" style={{ position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+          <div className="screen-item" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
             {mainHomeContent}
           </div>
 

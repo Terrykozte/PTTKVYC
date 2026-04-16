@@ -40,8 +40,7 @@ body {
 /* ── PHONE — iPhone 16 Pro Max (Desktop Preview) ── */
 .phone {
   width: 430px;
-  height: 932px;
-  height: 100dvh;
+  height: 932px; /* Fixed height for Desktop */
   max-width: 100vw;
   position: relative;
   overflow: hidden;
@@ -65,11 +64,11 @@ body {
 @media (max-width: 600px) {
   .phone {
     width: 100%;
-    height: 100dvh;
+    height: 100dvh; /* Fullscreen only on mobile */
     border-radius: 0;
     box-shadow: none;
     transform: none !important;
-    background: transparent; /* Allow body background to be visible or let internal bg handle it */
+    background: transparent; 
   }
   
   /* Hide simulated system UI on real mobile devices */
