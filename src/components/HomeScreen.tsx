@@ -2554,7 +2554,7 @@ export default function HomeScreen({
                       {/* PAGE 1: Challenge */}
                       <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <div
-                          onClick={() => navigateTo('challenge')}
+                          onClick={() => setShowChallengeModal(true)}
                           style={{
                             background: 'rgba(255,100,100,0.2)', padding: '6px 16px', borderRadius: 20,
                             display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',

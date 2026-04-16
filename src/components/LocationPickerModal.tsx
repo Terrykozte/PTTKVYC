@@ -180,8 +180,8 @@ export default function LocationPickerModal({
 
   const handlePick = (loc: PickedLocation) => {
     onSelect(loc);
-    const lat = 23 - (loc.mapY / 100) * 15;
-    const lng = 102 + (loc.mapX / 100) * 7;
+    const lat = 22.62 - (loc.mapY / 100) * 15;
+    const lng = 102.15 + (loc.mapX / 100) * 7;
     setFlyTarget([lat, lng]);
   };
 
@@ -285,8 +285,8 @@ export default function LocationPickerModal({
 
               {/* Selected location */}
               {selectedLocation && (() => {
-                const lat = 23 - (selectedLocation.mapY / 100) * 15;
-                const lng = 102 + (selectedLocation.mapX / 100) * 7;
+                const lat = 22.62 - (selectedLocation.mapY / 100) * 15;
+                const lng = 102.15 + (selectedLocation.mapX / 100) * 7;
                 return (
                   <Marker
                     position={[lat, lng]}

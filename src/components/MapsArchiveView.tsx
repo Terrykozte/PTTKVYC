@@ -26,7 +26,7 @@ export interface MapsArchiveViewProps {
 }
 
 function toLatLng(loc: NonNullable<HistoryItem['location']>): [number, number] {
-  return [23 - (loc.mapY / 100) * 15, 102 + (loc.mapX / 100) * 7];
+  return [22.62 - (loc.mapY / 100) * 15, 102.15 + (loc.mapX / 100) * 7];
 }
 
 function formatDate(d?: string): string {
