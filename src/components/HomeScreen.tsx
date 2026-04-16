@@ -3382,10 +3382,7 @@ export default function HomeScreen({
         `}</style>
 
         {/* 1.1 MEMORIES (LEFT TAB) — Locket-style dot calendar */}
-        <div style={{
-          flex: '0 0 100%',
-          width: '100%',
-          height: '100%',
+        <div className="screen-item" style={{
           display: 'flex',
           flexDirection: 'column',
           paddingTop: 0,
@@ -3563,19 +3560,18 @@ export default function HomeScreen({
         {/* 1.2 HOME (CENTER TAB) — vertical snap container: [Camera] ↕ [History] */}
         <div
           ref={homeSlideRef}
-          className="hide-scrollbar"
+          className="hide-scrollbar screen-item"
           onScroll={handleHomeVerticalScroll}
           style={{
-            flex: '0 0 100%',
-            width: '100%',
-            height: '100%',
             position: 'relative',
             overflowY: mode === 'preview' ? 'hidden' : 'auto',
             overflowX: 'hidden',
             scrollSnapType: 'y mandatory',
             touchAction: mode === 'preview' ? 'none' : 'pan-x pan-y',
             WebkitOverflowScrolling: 'touch',
-            pointerEvents: activeTab === 'home' ? 'auto' : 'none'
+            pointerEvents: activeTab === 'home' ? 'auto' : 'none',
+            display: 'flex',
+            flexDirection: 'column'
           }}
         >
           {/* ── PAGE 1: Camera / Home ── */}
@@ -3675,10 +3671,7 @@ export default function HomeScreen({
 
 
         {/* 1.3 CHAT (RIGHT TAB) */}
-        <div style={{
-          flex: '0 0 100%',
-          width: '100%',
-          height: '100%',
+        <div className="screen-item" style={{
           display: 'flex',
           flexDirection: 'column',
           paddingTop: 0,

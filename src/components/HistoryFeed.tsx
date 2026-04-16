@@ -199,8 +199,15 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
             key={item.id}
             ref={idx === 0 ? historyFeedRef : undefined}
             style={{
-              width: '100%', height: '100%', flex: 'none', scrollSnapAlign: 'start',
-              display: 'flex', flexDirection: 'column', position: 'relative'
+              width: '100%',
+              height: '100%',
+              flex: 'none',
+              scrollSnapAlign: 'start',
+              scrollSnapStop: 'always',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
             <div style={{ height: 180, flexShrink: 0 }} />
