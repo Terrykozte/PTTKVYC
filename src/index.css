@@ -23,7 +23,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #050505;
+  background: #000; /* Set to pure black for seamless iOS Safe Area transition */
   font-family: -apple-system, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -519,8 +519,7 @@ body {
   z-index: 20;
   display: flex;
   justify-content: center;
-  padding: 0 0 26px;
-  /* Tăng padding bottom để đẩy toàn bộ cụm nav lên 1 tí */
+  padding: 0 0 max(26px, env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 

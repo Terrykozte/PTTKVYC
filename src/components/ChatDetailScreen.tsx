@@ -1143,7 +1143,7 @@ export default function ChatDetailScreen(props: {
 
         {/* ── INPUT BAR ── */}
         <div style={{
-          padding: '0 14px 10px',
+          padding: `0 14px max(14px, env(safe-area-inset-bottom))`,
           flexShrink: 0,
           background: `linear-gradient(to top, ${warmBg} 60%, transparent 100%)`,
           display: 'flex',
