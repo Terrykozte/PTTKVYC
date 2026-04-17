@@ -63,13 +63,149 @@ export interface HistoryItem {
   collabInviter?: string;                  // who initiated the collab (name)
   collabInviterColor?: string;
   collabInviterAvatar?: string;
+  // Scroll-triggered "Ask to collab" prompt (Perspective 4).
+  // When the user scrolls to a post carrying this flag, an animated
+  // "Ask to collab" card slides in. Accepting transforms the post from
+  // a personal post → collab post (this component is the author + inviter).
+  askToCollabPrompt?: boolean;
 }
 
 const INITIAL_HISTORY: HistoryItem[] = [
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 1 — Own Post (author = viewerIdentity = 'P1')                ║
+  // ║ Activity section shows [Avatar + Name + Time + React (optional) + Reply].║
+  // ║ Mix of viewers WITH reactions and WITHOUT reactions to show both modes.   ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p1-own',
+    image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&q=80',
+    caption: 'Morning light ✨',
+    sender: 'P1',
+    senderColor: '#4169E1',
+    time: 'Just now',
+    date: '2026-04-18',
+    sendTo: ['all'],
+    // location removed to follow single-caption rule
+    // Rich activity data: some viewers reacted, some just viewed
+    viewedBy: { 'P2': '1m ago', 'P3': '4m ago', 'P4': '7m ago', 'P5': '8m ago', 'P8': '12m ago', 'P9': '18m ago', 'P10': '25m ago' },
+    reactions: { 'P2': '🔥', 'P5': '❤️', 'P9': '😂' },
+    // P3, P4, P8, P10 viewed but did NOT react → shown with reply button only
+  },
+
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 2 — Viewing a Friend's Post (author = P2, viewer = P1)       ║
+  // ║ UI shows a [Send a message] input bar.                                   ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p2-friend',
+    image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=800&q=80',
+    caption: null, // caption removed to follow single-caption rule (Location post)
+    sender: 'P2',
+    senderColor: '#FF8C00',
+    time: '8m',
+    date: '2026-04-18',
+    sendTo: ['all'],
+    location: { name: 'Quận 3, TP.HCM', mapX: 64, mapY: 79 },
+  },
+
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 3 — Collab Post (You + P6): your friends AND P6's audience.  ║
+  // ║ Avatar order: [P1 (You), P6] — author appears first.                     ║
+  // ║ P6's audience → collab strangers get "Add Friend", anonymous-opted get   ║
+  // ║ masked "Anonymous" avatars in Activity.                                  ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p3-collab-you-p6',
+    image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80',
+    caption: 'Weekend trip 🏞️',
+    sender: 'P1',
+    senderColor: '#4169E1',
+    time: '30m',
+    date: '2026-04-18',
+    sendTo: ['P2', 'P3', 'P4', 'P5'],
+    // location removed
+    collabStatus: 'accepted',
+    collabInviter: 'P1',
+    viewedBy: { 'P2': '5m ago', 'P3': '9m ago', 'P4': '12m ago', 'P5': '20m ago' },
+    reactions: { 'P2': '😍', 'P4': '👍' },
+    collabPartners: [
+      {
+        name: 'P6',
+        color: '#FF4500',
+        avatar: 'https://i.pravatar.cc/100?img=15',
+        sendTo: ['all'],  // P6's own friends — mix of strangers to P1
+      },
+    ],
+  },
+
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 4 — Scroll-Triggered Ask-to-Collab                           ║
+  // ║ Personal post belonging to P2. As the feed reaches this post, an         ║
+  // ║ "Ask to collab" card animates in. If accepted → transforms into collab.  ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p4-scroll-collab',
+    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=800&q=80',
+    caption: 'Studio day 🎧',
+    sender: 'P2',
+    senderColor: '#FF8C00',
+    time: '1h',
+    date: '2026-04-18',
+    sendTo: ['all'],
+    // location removed
+    askToCollabPrompt: true,
+  },
+
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 5a — Friends' collab: [P8, P10, P11]                         ║
+  // ║ Avatar order: [P8 (author), P10, P11] — author always first.             ║
+  // ║ Reply input bar — messaging routes 1-on-1 to P8 (the author).            ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p5-friends-collab-a',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+    caption: 'Team lunch 🍜',
+    sender: 'P8',
+    senderColor: '#9370DB',
+    time: '2h',
+    date: '2026-04-18',
+    sendTo: ['all'],
+    // location removed
+    collabStatus: 'accepted',
+    collabInviter: 'P8',
+    collabPartners: [
+      { name: 'P10', color: '#A9A9A9', avatar: 'https://i.pravatar.cc/100?img=19', sendTo: ['all'] },
+      { name: 'P11', color: '#FFD700', avatar: 'https://i.pravatar.cc/100?img=20', sendTo: ['all'] },
+    ],
+  },
+
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║ PERSPECTIVE 5b — Friends' collab with Anonymous: [P8, P10, Anonymous]    ║
+  // ║ One collab partner opted for anonymousCollab → renders as "Anonymous".   ║
+  // ║ Author (P10) appears first per routing rule.                             ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+  {
+    id: 'p5-friends-collab-b',
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
+    caption: null, // caption removed (Location post)
+    sender: 'P10',
+    senderColor: '#A9A9A9',
+    time: '3h',
+    date: '2026-04-18',
+    sendTo: ['all'],
+    location: { name: 'Quận Phú Nhuận, TP.HCM', mapX: 65, mapY: 78 },
+    collabStatus: 'accepted',
+    collabInviter: 'P10',
+    collabPartners: [
+      { name: 'P8',  color: '#9370DB', avatar: 'https://i.pravatar.cc/100?img=17', sendTo: ['all'] },
+      { name: 'P3',  color: '#6A5ACD', avatar: 'https://i.pravatar.cc/100?img=12', sendTo: ['all'], anonymousCollab: true },
+    ],
+  },
+
   {
     id: 'collab-1',
     image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80',
-    caption: 'Collab 🔥',
+    caption: null, // caption removed (Location post)
     sender: 'P1',
     senderColor: '#4169E1',
     time: 'Just now',
@@ -370,6 +506,183 @@ const INITIAL_HISTORY: HistoryItem[] = [
     date: '2026-04-02', sendTo: ['all'],
     location: { name: 'Đà Nẵng', mapX: 62, mapY: 44 },
   },
+
+  // ── DEMO MOCK: Memory Map clustering samples ────────────────────────────
+  // Coordinates chosen so clusters naturally form on zoom-out.
+  // D1 HCMC tight cluster (4 pins within ~500m)
+  {
+    id: 'p1-map-d1-benthanh',
+    image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80',
+    caption: 'Chợ Bến Thành buổi sáng 🥖',
+    sender: 'P1', senderColor: '#4169E1', time: '13d',
+    date: '2026-04-01', sendTo: ['all'],
+    location: { name: 'Chợ Bến Thành, Q.1, TP.HCM', mapX: 64.72, mapY: 79.23 },
+  },
+  {
+    id: 'p1-map-d1-bitexco',
+    image: 'https://images.unsplash.com/photo-1546489082-dfbfa77b9d45?w=800&q=80',
+    caption: 'Sky Deck view 🌆',
+    sender: 'P1', senderColor: '#4169E1', time: '14d',
+    date: '2026-03-31', sendTo: ['all'],
+    location: { name: 'Bitexco Tower, Q.1, TP.HCM', mapX: 65.66, mapY: 79.23 },
+  },
+  {
+    id: 'p1-map-d1-notredame',
+    image: 'https://images.unsplash.com/photo-1583416750470-965b2707b355?w=800&q=80',
+    caption: 'Nhà thờ Đức Bà ⛪',
+    sender: 'P1', senderColor: '#4169E1', time: '15d',
+    date: '2026-03-30', sendTo: ['all'],
+    location: { name: 'Nhà thờ Đức Bà, Q.1, TP.HCM', mapX: 64.86, mapY: 78.69 },
+  },
+  {
+    id: 'p1-map-d1-opera',
+    image: 'https://images.unsplash.com/photo-1544986581-efac024faf62?w=800&q=80',
+    caption: 'Opera House đêm ✨',
+    sender: 'P1', senderColor: '#4169E1', time: '16d',
+    date: '2026-03-29', sendTo: ['all'],
+    location: { name: 'Nhà hát Thành phố, Q.1, TP.HCM', mapX: 65.46, mapY: 78.90 },
+  },
+  // D2 Thảo Điền micro-cluster (2 pins)
+  {
+    id: 'p1-map-d2-thaodien',
+    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
+    caption: 'Cà phê Thảo Điền ☕',
+    sender: 'P1', senderColor: '#4169E1', time: '17d',
+    date: '2026-03-28', sendTo: ['all'],
+    location: { name: 'Thảo Điền, Q.2, TP.HCM', mapX: 69.51, mapY: 78.11 },
+  },
+  {
+    id: 'p1-map-d2-anphu',
+    image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&q=80',
+    caption: 'Brunch An Phú 🥐',
+    sender: 'P1', senderColor: '#4169E1', time: '18d',
+    date: '2026-03-27', sendTo: ['all'],
+    location: { name: 'An Phú, Q.2, TP.HCM', mapX: 70.07, mapY: 78.18 },
+  },
+  // D3 pair
+  {
+    id: 'p1-map-d3-turtle',
+    image: 'https://images.unsplash.com/photo-1559234938-b60fff04894d?w=800&q=80',
+    caption: 'Hồ Con Rùa chiều 🌅',
+    sender: 'P1', senderColor: '#4169E1', time: '19d',
+    date: '2026-03-26', sendTo: ['all'],
+    location: { name: 'Hồ Con Rùa, Q.3, TP.HCM', mapX: 64.60, mapY: 78.91 },
+  },
+  {
+    id: 'p1-map-d3-cafe',
+    image: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800&q=80',
+    caption: 'Specialty coffee stop ☕',
+    sender: 'P1', senderColor: '#4169E1', time: '20d',
+    date: '2026-03-25', sendTo: ['all'],
+    location: { name: 'Võ Văn Tần, Q.3, TP.HCM', mapX: 63.94, mapY: 78.61 },
+  },
+  // Đà Nẵng + Hội An close pair
+  {
+    id: 'p1-map-dn-dragon',
+    image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=800&q=80',
+    caption: 'Cầu Rồng phun lửa 🐉',
+    sender: 'P1', senderColor: '#4169E1', time: '22d',
+    date: '2026-03-23', sendTo: ['all'],
+    location: { name: 'Cầu Rồng, Đà Nẵng', mapX: 86.71, mapY: 43.72 },
+  },
+  {
+    id: 'p1-map-dn-mykhe',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+    caption: 'Biển Mỹ Khê sớm mai 🌊',
+    sender: 'P1', senderColor: '#4169E1', time: '23d',
+    date: '2026-03-22', sendTo: ['all'],
+    location: { name: 'Bãi biển Mỹ Khê, Đà Nẵng', mapX: 86.98, mapY: 43.77 },
+  },
+  {
+    id: 'p1-map-hoian',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80',
+    caption: 'Phố cổ Hội An đèn lồng 🏮',
+    sender: 'P1', senderColor: '#4169E1', time: '24d',
+    date: '2026-03-21', sendTo: ['all'],
+    location: { name: 'Phố cổ Hội An, Quảng Nam', mapX: 88.26, mapY: 44.93 },
+  },
+  // Đà Lạt micro-cluster
+  {
+    id: 'p1-map-dl-xuanhuong',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80',
+    caption: 'Hồ Xuân Hương sương sớm ❄️',
+    sender: 'P1', senderColor: '#4169E1', time: '25d',
+    date: '2026-03-20', sendTo: ['all'],
+    location: { name: 'Hồ Xuân Hương, Đà Lạt', mapX: 89.92, mapY: 71.17 },
+  },
+  {
+    id: 'p1-map-dl-market',
+    image: 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=800&q=80',
+    caption: 'Chợ đêm Đà Lạt 🌰',
+    sender: 'P1', senderColor: '#4169E1', time: '26d',
+    date: '2026-03-19', sendTo: ['all'],
+    location: { name: 'Chợ Đà Lạt, Lâm Đồng', mapX: 89.81, mapY: 71.15 },
+  },
+  // Isolated pins — Hà Nội, Hạ Long, Sapa, Huế, Vũng Tàu, Phú Quốc, Cần Thơ
+  {
+    id: 'p1-map-hn-hoankiem',
+    image: 'https://images.unsplash.com/photo-1509030450996-dd1a26dda07a?w=800&q=80',
+    caption: 'Hồ Hoàn Kiếm 🐢',
+    sender: 'P1', senderColor: '#4169E1', time: '27d',
+    date: '2026-03-18', sendTo: ['all'],
+    location: { name: 'Hồ Hoàn Kiếm, Hà Nội', mapX: 52.88, mapY: 10.61 },
+  },
+  {
+    id: 'p1-map-hn-westlake',
+    image: 'https://images.unsplash.com/photo-1465447142348-e9952c393450?w=800&q=80',
+    caption: 'Hồ Tây hoàng hôn 🌇',
+    sender: 'P1', senderColor: '#4169E1', time: '28d',
+    date: '2026-03-17', sendTo: ['all'],
+    location: { name: 'Hồ Tây, Tây Hồ, Hà Nội', mapX: 52.39, mapY: 10.42 },
+  },
+  {
+    id: 'p1-map-halong',
+    image: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=800&q=80',
+    caption: 'Vịnh Hạ Long kỳ quan 🛶',
+    sender: 'P1', senderColor: '#4169E1', time: '30d',
+    date: '2026-03-15', sendTo: ['all'],
+    location: { name: 'Vịnh Hạ Long, Quảng Ninh', mapX: 71.91, mapY: 11.39 },
+  },
+  {
+    id: 'p1-map-sapa',
+    image: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80',
+    caption: 'Ruộng bậc thang Sapa 🌾',
+    sender: 'P1', senderColor: '#4169E1', time: '32d',
+    date: '2026-03-13', sendTo: ['all'],
+    location: { name: 'Sapa, Lào Cai', mapX: 24.20, mapY: 1.89 },
+  },
+  {
+    id: 'p1-map-hue',
+    image: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80',
+    caption: 'Đại Nội Huế 👑',
+    sender: 'P1', senderColor: '#4169E1', time: '34d',
+    date: '2026-03-11', sendTo: ['all'],
+    location: { name: 'Đại Nội, Huế', mapX: 77.73, mapY: 41.09 },
+  },
+  {
+    id: 'p1-map-vungtau',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+    caption: 'Vũng Tàu cuối tuần 🏖️',
+    sender: 'P1', senderColor: '#4169E1', time: '35d',
+    date: '2026-03-10', sendTo: ['all'],
+    location: { name: 'Bãi Sau, Vũng Tàu', mapX: 70.49, mapY: 81.79 },
+  },
+  {
+    id: 'p1-map-phuquoc',
+    image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80',
+    caption: 'Bãi Sao Phú Quốc 🐚',
+    sender: 'P1', senderColor: '#4169E1', time: '38d',
+    date: '2026-03-07', sendTo: ['all'],
+    location: { name: 'Bãi Sao, Phú Quốc', mapX: 26.20, mapY: 82.14 },
+  },
+  {
+    id: 'p1-map-cantho',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80',
+    caption: 'Chợ nổi Cái Răng 🚣',
+    sender: 'P1', senderColor: '#4169E1', time: '40d',
+    date: '2026-03-05', sendTo: ['all'],
+    location: { name: 'Chợ nổi Cái Răng, Cần Thơ', mapX: 51.39, mapY: 83.83 },
+  },
 ];
 // Current viewer identity (internal ID)
 const DEFAULT_VIEWER = 'P1';
@@ -407,6 +720,10 @@ interface HomeScreenProps {
 }
 
 // -- Custom Components for UI Modernization --
+// Activity Row Layout: [Avatar] + [Name + Time] + [React Emoji (if any)] + [Reply Button]
+// ─── The reaction emoji and reply button are BOTH shown when a reaction exists.
+// ─── When no reaction, only the reply button is shown.
+// ─── For non-friends (via collab), show "Add Friend" instead of reply.
 interface ViewerRowProps {
   identity: { name: string; color: string; avatar?: string };
   reaction?: string;
@@ -421,7 +738,7 @@ interface ViewerRowProps {
 
 const ViewerRow: React.FC<ViewerRowProps> = ({ identity, reaction, time, isSelf, onReply, onAddFriend, isAdded, isSent }) => (
   <div style={{
-    display: 'flex', alignItems: 'center', gap: 14,
+    display: 'flex', alignItems: 'center', gap: 12,
     padding: '12px 24px',
     width: '100%',
     boxSizing: 'border-box',
@@ -431,7 +748,7 @@ const ViewerRow: React.FC<ViewerRowProps> = ({ identity, reaction, time, isSelf,
     position: 'relative',
     opacity: isSent ? 0.45 : 1,
   }}>
-    {/* Avatar */}
+    {/* 1. Avatar */}
     <div style={{
       width: 46, height: 46, borderRadius: '50%',
       backgroundColor: identity.color,
@@ -445,10 +762,10 @@ const ViewerRow: React.FC<ViewerRowProps> = ({ identity, reaction, time, isSelf,
       {!identity.avatar && <span style={{ color: '#fff', fontSize: 16, fontWeight: 800 }}>{identity.name.charAt(0)}</span>}
     </div>
 
-    {/* Name & Time */}
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+    {/* 2. Name + Time */}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{identity.name}</span>
+        <span style={{ color: '#fff', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{identity.name}</span>
         {isSelf && <span style={{ fontSize: 10, background: 'rgba(255,215,0,0.2)', color: '#FFD700', padding: '1px 6px', borderRadius: 6, fontWeight: 800 }}>YOU</span>}
         {onAddFriend && !isAdded && <span style={{ fontSize: 10, background: 'rgba(100,180,255,0.15)', color: '#64B4FF', padding: '1px 6px', borderRadius: 6, fontWeight: 700 }}>via Collab</span>}
       </div>
@@ -457,19 +774,23 @@ const ViewerRow: React.FC<ViewerRowProps> = ({ identity, reaction, time, isSelf,
       </span>
     </div>
 
-    {/* Reaction & Action */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      {reaction ? (
-        <div style={{
-          fontSize: 22,
-          animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          background: 'rgba(255,255,255,0.06)',
-          width: 38, height: 38, borderRadius: 12,
-          display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          {reaction}
-        </div>
-      ) : onAddFriend ? (
+    {/* 3. React Emoji (if any) — shown alongside reply, NOT instead of */}
+    {reaction && (
+      <div style={{
+        fontSize: 22,
+        animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        background: 'rgba(255,255,255,0.06)',
+        width: 38, height: 38, borderRadius: 12,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        flexShrink: 0,
+      }}>
+        {reaction}
+      </div>
+    )}
+
+    {/* 4. Reply / Add Friend action */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+      {onAddFriend ? (
         <button
           onClick={onAddFriend}
           style={{
@@ -970,6 +1291,8 @@ export default function HomeScreen({
     if (!currentItem) return;
 
     const targetName = repliedViewer.name;
+    const hasReaction = !!repliedViewer.reaction;
+
     const newMessage: Message = {
       id: Date.now().toString(),
       type: 'text',
@@ -978,10 +1301,14 @@ export default function HomeScreen({
       status: 'sent',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestampNum: Date.now(),
-      replyToReact: {
-        icon: repliedViewer.reaction,
-        imageUrl: currentItem.image
-      },
+      // If there's a reaction → include replyToReact with the react emoji + photo
+      // If no reaction → only include contextPhoto (just the photo, no react icon)
+      ...(hasReaction ? {
+        replyToReact: {
+          icon: repliedViewer.reaction,
+          imageUrl: currentItem.image
+        }
+      } : {}),
       contextPhoto: {
         url: currentItem.image,
         caption: currentItem.caption,
@@ -993,7 +1320,7 @@ export default function HomeScreen({
       ...prev,
       [targetName]: [...(prev[targetName] || []), newMessage]
     }));
-    spawnParticles(repliedViewer.reaction);
+    spawnParticles(hasReaction ? repliedViewer.reaction : '💬');
     setRepliedViewer(null);
     setShowViewersModal(false);
     // Giữ nguyên màn hình hiện tại — không chuyển sang tab chat
@@ -1246,7 +1573,7 @@ export default function HomeScreen({
   // Tự động chọn thử thách hôm nay (14/04/2026 -> Tháng 4, Tuần 2, Ngày 7)
   const [activeChallengeSlot, setActiveChallengeSlot] = useState<{
     week: 'W1' | 'W2' | 'W3' | 'W4'; dayIndex: number; theme: string; month: number;
-  } | null>({ month: 4, week: 'W2', dayIndex: 6, theme: 'Thiên nhiên' });
+  } | null>(null);
   const [showMemoryDetail, setShowMemoryDetail] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
   const [lastSentLocation, setLastSentLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
@@ -1257,6 +1584,7 @@ export default function HomeScreen({
   useEffect(() => {
     if (forceCaptionText === '📍 Location' || forceCaptionText?.includes('📍 Location')) {
       setShowLocationPicker(true);
+      setComposePageIndex(2); // Auto-switch to location page
     }
   }, [forceCaptionText, setShowLocationPicker]);
   const [selectedCalendarPhoto, setSelectedCalendarPhoto] = useState<HistoryItem | null>(null);
@@ -1288,15 +1616,39 @@ export default function HomeScreen({
     setPendingCaption('');
   }, [currentHistoryIdx]);
 
+  // Cache of the viewport height + last page index so we avoid layout reads
+  // and React re-renders on every scroll pixel (the biggest source of jank).
+  const scrollStateRef = useRef({ h: 0, lastPage: -999, rafId: 0 });
   const handleHomeVerticalScroll = useCallback(() => {
-    if (!homeSlideRef.current) return;
     const el = homeSlideRef.current;
-    const h = el.clientHeight;
-    const scrollY = el.scrollTop;
-    const pageIdx = Math.round(scrollY / h);
-    const inHistory = pageIdx >= 1;
-    setIsInHistory(inHistory);
-    setCurrentHistoryIdx(inHistory ? pageIdx - 1 : -1);
+    if (!el) return;
+    // Coalesce scroll events to one read per frame.
+    if (scrollStateRef.current.rafId) return;
+    scrollStateRef.current.rafId = requestAnimationFrame(() => {
+      scrollStateRef.current.rafId = 0;
+      const state = scrollStateRef.current;
+      if (!state.h) state.h = el.clientHeight;
+      const pageIdx = Math.round(el.scrollTop / state.h);
+      if (pageIdx === state.lastPage) return; // no boundary crossed → skip setState
+      state.lastPage = pageIdx;
+      const inHistory = pageIdx >= 1;
+      setIsInHistory(inHistory);
+      setCurrentHistoryIdx(inHistory ? pageIdx - 1 : -1);
+    });
+  }, []);
+
+  // Reset cached dimensions on resize / orientation change
+  useEffect(() => {
+    const onResize = () => {
+      scrollStateRef.current.h = 0;
+      sliderStateRef.current.w = 0;
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
   }, []);
 
   const bnavDOMRef = useRef<HTMLDivElement>(null);
@@ -1631,7 +1983,7 @@ export default function HomeScreen({
 
 
 
-  const [bgOpacity, setBgOpacity] = useState(0);
+  const [bgOpacity] = useState(0);
   const bgOverlayRef = useRef<HTMLDivElement>(null);
 
   const startCamera = async (forceFacing?: 'user' | 'environment') => {
@@ -1851,13 +2203,55 @@ export default function HomeScreen({
     setSelectedFriends([]);
     setIsAllSelected(true);
     setSelectedLocation(null);
-    setComposePageIndex(0);
+
   };
 
-  const handleSelectChallengeSlot = () => {
-    // ChallengeModal is view-only from compose — just close it
+  const handleSelectChallengeSlot = (week: string, dayIndex: number, theme: string, month: number) => {
+    // Flow 1: user picked a challenge slot from the modal.
+    // → arm activeChallengeSlot, then drop them at the home shutter.
+    //   When they later capture a photo, the preview's compose page
+    //   defaults to the Challenge tab (via the effect below) so the
+    //   caption auto-syncs to the challenge code and Send saves to the slot.
+    setActiveChallengeSlot({
+      week: week as 'W1' | 'W2' | 'W3' | 'W4',
+      dayIndex,
+      theme,
+      month,
+    });
     setShowChallengeModal(false);
+
+    // Make sure the user is on the Home tab at the shutter
+    if (activeTab !== 'home') setActiveTab('home');
+
+    // If they're already in preview, jump to Challenge compose immediately
+    if (mode === 'preview') {
+      setComposePageIndex(1);
+    }
   };
+
+  // Flow 1 bridge: when mode transitions to preview and a challenge slot is
+  // armed, auto-open the Challenge compose page so the caption = challenge code.
+  useEffect(() => {
+    if (mode === 'preview' && activeChallengeSlot) {
+      setComposePageIndex(1);
+    }
+  }, [mode, activeChallengeSlot]);
+
+  // Enforce mutual exclusivity: clear other fields when switching tabs
+  useEffect(() => {
+    if (mode === 'preview') {
+      if (composePageIndex === 0) { // Text Tab
+        setSelectedLocation(null);
+        setActiveChallengeSlot(null);
+      } else if (composePageIndex === 1) { // Challenge Tab
+        setMessage('');
+        setSelectedLocation(null);
+      } else if (composePageIndex === 2) { // Location Tab
+        setMessage('');
+        setActiveChallengeSlot(null);
+      }
+    }
+  }, [composePageIndex, mode]);
 
   // Simulate saving to DB by exporting cropped image to Local Folder
   const handleSend = () => {
@@ -1909,27 +2303,37 @@ export default function HomeScreen({
         };
       });
 
-      // ── Determine challenge state (solely by which compose page is active) ──
-      const isChallengePost = composePageIndex === 1;
-      const dayWithinWeek = _currentDay - (_currentWeekNum - 1) * 7;
+      // ── Determine challenge state ──
+      // Use activeChallengeSlot if user explicitly selected one, otherwise fall back to compose page
+      const isChallengePost = composePageIndex === 1 || !!activeChallengeSlot;
+
+      // Use the user-selected slot if available, otherwise compute from today
+      const resolvedSlot = isChallengePost
+        ? (activeChallengeSlot || {
+          week: `W${_currentWeekNum}` as 'W1' | 'W2' | 'W3' | 'W4',
+          dayIndex: (_currentDay - 1) % 7,
+          theme: _currentWeekTheme,
+          month: _currentMonth,
+        })
+        : null;
+
+      const dayWithinWeek = resolvedSlot
+        ? resolvedSlot.dayIndex + 1
+        : _currentDay - (_currentWeekNum - 1) * 7;
 
       let finalCaption: string | null;
-      if (isChallengePost) {
-        finalCaption = `Challenge M${_currentMonth}W${_currentWeekNum}D${dayWithinWeek}: ${_currentWeekTheme}`;
+      if (isChallengePost && resolvedSlot) {
+        finalCaption = `Challenge M${resolvedSlot.month}${resolvedSlot.week}D${dayWithinWeek}: ${resolvedSlot.theme}`;
       } else {
-        finalCaption = message.trim()
-          ? (selectedLocation ? `${message.trim()} • 📍 ${selectedLocation.name}` : message.trim())
-          : (selectedLocation ? `📍 ${selectedLocation.name}` : null);
+        finalCaption = message.trim() ? message.trim() : null;
       }
 
-      const resolvedSlot = isChallengePost ? {
-        week: `W${_currentWeekNum}` as 'W1' | 'W2' | 'W3' | 'W4',
-        dayIndex: (_currentDay - 1) % 7,
-        theme: _currentWeekTheme,
-        month: _currentMonth,
-      } : null;
-
       // ── Insert at top of history feed ──
+      // ONLY save to map when the user explicitly picked a location via the
+      // Location caption page. Fuzzy caption matching was adding every photo
+      // that mentioned a place name to the map, which the user doesn't want.
+      const finalLocation = selectedLocation || undefined;
+
       const newItem: HistoryItem = {
         id: `sent-${Date.now()}`,
         image: dataUrl,
@@ -1942,9 +2346,15 @@ export default function HomeScreen({
         collabPartners: collabPartners.length > 0 ? collabPartners : undefined,
         isChallenge: isChallengePost,
         challengeTag: resolvedSlot
-          ? `W${_currentWeekNum} D${dayWithinWeek} - ${resolvedSlot.theme}` : undefined,
-        location: selectedLocation || (finalCaption?.toLowerCase().includes('quận 1') || finalCaption?.toLowerCase().includes('district 1') ? { name: 'Quận 1, HCM', mapX: 65, mapY: 79 } : undefined),
+          ? `${resolvedSlot.week} D${dayWithinWeek} - ${resolvedSlot.theme}` : undefined,
+        location: finalLocation,
       };
+
+      // Cập nhật vị trí tiêu điểm cho bản đồ
+      if (finalLocation) {
+        const [lat, lng] = [22.62 - (finalLocation.mapY / 100) * 15, 102.15 + (finalLocation.mapX / 100) * 7];
+        setMapFocusCoords({ lat, lng, name: finalLocation.name });
+      }
 
       setHistoryItems(prev => [newItem, ...prev]);
 
@@ -2192,11 +2602,24 @@ export default function HomeScreen({
     handleSliderScroll();
   }, [mode, activeTab, isInHistory]);
 
+  // Cache container width + coalesce scroll events into one read per frame.
+  const sliderStateRef = useRef({ w: 0, rafId: 0, lastIdx: -1 });
   const handleSliderScroll = () => {
     if (!mainSliderRef.current) return;
-    const scrollX = mainSliderRef.current.scrollLeft;
+    if (sliderStateRef.current.rafId) return;
+    sliderStateRef.current.rafId = requestAnimationFrame(() => {
+      sliderStateRef.current.rafId = 0;
+      runSliderScroll();
+    });
+  };
+  const runSliderScroll = () => {
+    if (!mainSliderRef.current) return;
     const container = mainSliderRef.current;
-    const width = container.getBoundingClientRect().width;
+    const scrollX = container.scrollLeft;
+    if (!sliderStateRef.current.w) {
+      sliderStateRef.current.w = container.getBoundingClientRect().width;
+    }
+    const width = sliderStateRef.current.w;
     if (width === 0) return;
 
     // Bidirectional Background Dimming Logic:
@@ -2207,7 +2630,10 @@ export default function HomeScreen({
     if (bgOverlayRef.current) {
       bgOverlayRef.current.style.opacity = String(opacity);
     }
-    setBgOpacity(opacity); // still keep for header gradient color sync
+    // NOTE: don't setState here — bgOpacity was only used as the initial opacity
+    // value; actual runtime updates go through the ref above. Calling setState on
+    // every scroll pixel re-renders the whole 5000-line HomeScreen and is the
+    // main cause of janky bottom-tab transitions.
 
     // ── Header cross-fade ────────────────────────────────────────────────────
     // p: 0 = home, 1 = chat, -1 = calendar
@@ -2283,7 +2709,11 @@ export default function HomeScreen({
 
 
     const idx = Math.round(scrollX / width);
-    if (tabs[idx] && tabs[idx] !== activeTab) {
+    // Only fire setState when crossing a tab boundary AND the index actually
+    // differs from what we last committed — prevents flickering setState during
+    // free-scroll rubber-banding.
+    if (tabs[idx] && tabs[idx] !== activeTab && idx !== sliderStateRef.current.lastIdx) {
+      sliderStateRef.current.lastIdx = idx;
       setActiveTab(tabs[idx]);
     }
   };
@@ -2455,7 +2885,7 @@ export default function HomeScreen({
               return (
                 <div style={{
                   position: 'absolute',
-                  bottom: 50, // Higher position within the 1:1 square as requested
+                  bottom: 18, // Aligned with HistoryFeed pill position
                   left: 0, width: '100%', zIndex: 100,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   pointerEvents: 'none'
@@ -2477,16 +2907,16 @@ export default function HomeScreen({
                       transform: `translateX(${trackOffset}px)`,
                       transition: composeSwipeRef.current.active ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)',
                     }}>
-                      {/* PAGE 0: Message */}
+                      {/* PAGE 0: Message - Compact Integrated Panel */}
                       <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
                         {/* AI captions suggestions panel */}
                         {showAiCaptions && (
                           <div style={{
                             position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
-                            background: 'rgba(28,28,30,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
                             borderRadius: 18, padding: '10px 10px', minWidth: 220,
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
                             display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10,
                           }}>
                             <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 4, letterSpacing: 0.5 }}>
@@ -2515,15 +2945,24 @@ export default function HomeScreen({
                           </div>
                         )}
 
-                        {/* Input pill center + Wand button right */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', padding: '0 20px' }}>
+                        <div
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                            transform: `scale(${composePageIndex === 0 ? 1.02 : 0.92})`,
+                            opacity: composePageIndex === 0 ? 1 : 0.5,
+                            transition: 'all 0.4s cubic-bezier(0.19, 1, 0.22, 1)'
+                          }}
+                        >
+                          {/* Left Spacer for Weighted Centering */}
+                          <div style={{ width: 44, flexShrink: 0 }} />
+
+                          {/* Text Panel */}
                           <div style={{
-                            background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                            borderRadius: 24, padding: '0 20px', flex: 1, maxWidth: 300, height: 48,
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+                            borderRadius: 22, padding: '0 16px', height: 44,
+                            display: 'flex', alignItems: 'center', gap: 10,
                             border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                            transition: 'all 0.3s'
+                            boxShadow: composePageIndex === 0 ? '0 10px 30px rgba(0,0,0,0.3)' : 'none',
                           }}>
                             <input
                               className="msg-textarea"
@@ -2531,56 +2970,93 @@ export default function HomeScreen({
                               onChange={(e) => setMessage(e.target.value.slice(0, 40))}
                               placeholder="Add a message"
                               style={{
-                                width: '100%',
+                                width: message ? 0 : 110, // Placeholder-based width
+                                minWidth: message ? 'fit-content' : 110,
+                                maxWidth: 240,
                                 textAlign: 'center', background: 'transparent', border: 'none', outline: 'none', color: 'white',
-                                fontSize: 16, fontWeight: 800
+                                fontSize: 15, fontWeight: 700
                               }}
                             />
                           </div>
+
+                          {/* Wand Panel (Separate) */}
                           <button
                             onClick={handleAiCaptionClick}
                             className="ai-wand-bounce"
                             style={{
-                              width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                              background: 'rgba(255,255,255,0.15)',
-                              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              width: 44, height: 44, borderRadius: 22, flexShrink: 0,
+                            background: 'rgba(0,0,0,0.42)',
+                            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+                            border: composePageIndex === 0 ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
                               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 20, transition: 'all 0.2s',
-                              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                              fontSize: 18, transition: 'all 0.2s',
+                              boxShadow: composePageIndex === 0 ? '0 10px 30px rgba(0,0,0,0.2)' : 'none',
                               opacity: aiCaptionLoading ? 0.5 : 1,
                             }}
                           >🪄</button>
                         </div>
                       </div>
 
-                      {/* PAGE 1: Challenge */}
+                      {/* PAGE 1: Challenge - Compact Panel */}
                       <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <div
                           onClick={() => setShowChallengeModal(true)}
                           style={{
-                            background: 'rgba(255,100,100,0.2)', padding: '6px 16px', borderRadius: 20,
+                            background: activeChallengeSlot
+                              ? 'linear-gradient(135deg, rgba(255,100,100,0.35), rgba(255,50,50,0.25))'
+                              : 'rgba(255,100,100,0.25)',
+                            padding: '0 16px', borderRadius: 22, height: 44, width: 'fit-content',
                             display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                            border: composePageIndex === 1 ? '1px solid rgba(255,140,140,0.4)' : '1px solid transparent',
+                            border: composePageIndex === 1
+                              ? '1px solid rgba(255,140,140,0.3)'
+                              : '1px solid transparent',
+                            transform: `scale(${composePageIndex === 1 ? 1.02 : 0.92})`,
+                            opacity: composePageIndex === 1 ? 1 : 0.4,
+                            boxShadow: composePageIndex === 1 ? '0 10px 30px rgba(255,100,100,0.2)' : 'none',
+                            transition: 'all 0.4s cubic-bezier(0.19, 1, 0.22, 1)',
                           }}
                         >
-                          <span style={{ fontSize: 16 }}>🎯</span>
-                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800 }}>Challenge</span>
+                          <span style={{ fontSize: 18 }}>🎯</span>
+                          <span style={{
+                            color: 'white', fontSize: 14, fontWeight: 700,
+                            maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {activeChallengeSlot
+                              ? `${activeChallengeSlot.week} · ${activeChallengeSlot.theme}`
+                              : 'Challenge'}
+                          </span>
                         </div>
                       </div>
 
-                      {/* PAGE 2: Location */}
+                      {/* PAGE 2: Location - Compact Panel */}
                       <div style={{ width: pagerWidth, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <div
                           onClick={() => setShowLocationPicker(true)}
                           style={{
-                            background: 'rgba(100,150,255,0.2)', padding: '6px 16px', borderRadius: 20,
+                            background: selectedLocation
+                              ? 'linear-gradient(135deg, rgba(0,102,255,0.45), rgba(0,122,255,0.35))'
+                              : 'rgba(0,102,255,0.35)',
+                            padding: '0 16px', borderRadius: 22, height: 44, width: 'fit-content',
                             display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                            border: composePageIndex === 2 ? '1px solid rgba(140,180,255,0.4)' : '1px solid transparent',
+                            border: composePageIndex === 2
+                              ? (selectedLocation
+                                ? '1px solid rgba(255,255,255,0.2)'
+                                : '1px solid rgba(255,255,255,0.2)')
+                              : '1px solid transparent',
+                            transform: `scale(${composePageIndex === 2 ? 1.02 : 0.92})`,
+                            opacity: composePageIndex === 2 ? 1 : 0.4,
+                            boxShadow: composePageIndex === 2
+                              ? (selectedLocation ? '0 10px 30px rgba(0,102,255,0.2)' : '0 10px 30px rgba(0,102,255,0.2)')
+                              : 'none',
+                            transition: 'all 0.4s cubic-bezier(0.19, 1, 0.22, 1)',
                           }}
                         >
-                          <span style={{ fontSize: 16 }}>📍</span>
-                          <span style={{ color: 'white', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 18 }}>{selectedLocation ? '✅' : '📍'}</span>
+                          <span style={{
+                            color: 'white', fontSize: 14, fontWeight: 700,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            maxWidth: 180,
+                          }}>
                             {selectedLocation ? selectedLocation.name : 'Vị trí'}
                           </span>
                         </div>
@@ -2608,7 +3084,6 @@ export default function HomeScreen({
         </div>
       )}
 
-      <div style={{ flex: 1, minHeight: 16 }} />
 
       {/* CONTROLS — positions FIXED, only icons swap */}
       <div className="controls">
@@ -2745,7 +3220,7 @@ export default function HomeScreen({
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: 0, paddingBottom: mode === 'camera' ? `calc(165px + var(--safe-bottom))` : `calc(85px + var(--safe-bottom))` }}>
+      <div className="history-area" style={{ marginBottom: 0, paddingBottom: `calc(10px + var(--safe-bottom))` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"
@@ -3137,7 +3612,7 @@ export default function HomeScreen({
                 whiteSpace: 'nowrap',
                 transition: 'all 0.35s cubic-bezier(0.32, 1, 0.67, 1)',
                 opacity: mode === 'preview' ? 0 : 1,
-                pointerEvents: (isChatDetailOpen || mode === 'preview') ? 'none' : 'auto',
+                pointerEvents: (isChatDetailOpen || mode === 'preview' || activeTab !== 'home') ? 'none' : 'auto',
                 maxWidth: '65%',
               }}
             >
@@ -3569,6 +4044,27 @@ export default function HomeScreen({
                   : i
               ));
             }}
+            onAcceptAskToCollab={(itemId) => {
+              // Perspective 4: personal post → collab post; viewer becomes a partner.
+              setHistoryItems(prev => prev.map(i =>
+                i.id === itemId
+                  ? {
+                    ...i,
+                    askToCollabPrompt: false,
+                    collabStatus: 'accepted' as const,
+                    collabInviter: i.sender,
+                    collabInviterColor: i.senderColor,
+                    collabPartners: [
+                      ...(i.collabPartners || []),
+                      { name: viewerIdentity, color: '#4169E1', avatar: undefined, sendTo: ['all'] },
+                    ],
+                  }
+                  : i
+              ));
+            }}
+            onDismissAskToCollab={(itemId) => {
+              setHistoryItems(prev => prev.map(i => i.id === itemId ? { ...i, askToCollabPrompt: false } : i));
+            }}
             isFriend={isFriend}
             sortAvatars={sortAvatars}
           />
@@ -3855,20 +4351,23 @@ export default function HomeScreen({
         />
       )}
 
-      {/* ── MAP VIEW MODAL ── */}
       {showMapView && (
         <MapsArchiveView
           historyItems={historyItems}
           viewerIdentity={viewerIdentity}
+          initialFocusLocation={mapFocusCoords}
           onClose={() => setShowMapView(false)}
         />
       )}
 
-      {/* ── LOCATION PICKER MODAL ── */}
       {showLocationPicker && (
         <LocationPickerModal
           selectedLocation={selectedLocation}
-          onSelect={(loc) => { setSelectedLocation(loc); setShowLocationPicker(false); }}
+          onSelect={(loc) => {
+            setSelectedLocation(loc);
+            setShowLocationPicker(false);
+            setComposePageIndex(2); // Show the location they just picked
+          }}
           onClose={() => setShowLocationPicker(false)}
         />
       )}
@@ -3945,47 +4444,70 @@ export default function HomeScreen({
 
                 const collabPartners = currentItem.collabPartners || [];
                 const viewedBy = currentItem.viewedBy || {};
+                const isCollabPost = collabPartners.length > 0;
 
-                // My friends who received this post
+                // ── MY DIRECT FRIENDS who have VIEWED (spec: viewers only, not recipients)
                 const myFriendRecipients = MOCK_FRIENDS.filter(f =>
                   currentItem.sendTo.includes('all') || currentItem.sendTo.includes(f.name)
                 );
-
                 const viewedFriends = myFriendRecipients.filter(f => viewedBy[f.name]);
-                const sentButNotViewed = myFriendRecipients.filter(f => !viewedBy[f.name]);
 
-                // Non-friend viewers from collab partners' audience
+                // ── COLLAB partners' audience: three sub-groups
+                // 1. Friends of collab partner that are strangers to me → Add Friend button
+                // 2. Anonymous viewers (collab partner opted for anonymous) → masked avatar + "Anonymous"
+                // Both categories: reply is disabled (direct messaging requires friendship).
                 const myFriendNames = new Set(MOCK_FRIENDS.map(f => f.name));
-                const collabNonFriends: Array<{ id: string; name: string; color: string; avatar: string; time: string }> = [];
+                const collabStrangers: Array<{ id: string; name: string; color: string; avatar: string; time: string; viaPartner: string }> = [];
+                const anonymousViewers: Array<{ id: string; color: string; time: string; viaPartner: string }> = [];
+
                 collabPartners.forEach(partner => {
+                  const partnerIsAnon = !!partner.anonymousCollab;
                   const partnerAudience = partner.sendTo.includes('all')
                     ? NON_FRIEND_VIEWERS
                     : NON_FRIEND_VIEWERS.filter(nf => partner.sendTo.includes(nf.name));
+
                   partnerAudience.forEach(nf => {
-                    if (!myFriendNames.has(nf.name) && !collabNonFriends.find(x => x.id === nf.id)) {
-                      collabNonFriends.push(nf);
+                    if (myFriendNames.has(nf.name)) return;
+                    if (partnerIsAnon) {
+                      anonymousViewers.push({
+                        id: `anon-${nf.id}-${partner.name}`,
+                        color: '#444',
+                        time: nf.time,
+                        viaPartner: partner.name,
+                      });
+                    } else if (!collabStrangers.find(x => x.id === nf.id)) {
+                      collabStrangers.push({ ...nf, viaPartner: partner.name });
                     }
                   });
                 });
 
-                const totalViewCount = viewedFriends.length + collabNonFriends.length;
+                const totalViewCount = viewedFriends.length + collabStrangers.length + anonymousViewers.length;
 
                 return (
                   <>
-                    {/* ── Viewed section ── */}
+                    {/* ── Viewed section header ── */}
                     <div style={{ padding: '20px 24px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                        Viewed · {totalViewCount}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                          Viewed · {totalViewCount}
+                        </span>
+                        {isCollabPost && (
+                          <span style={{
+                            fontSize: 10, background: 'rgba(255,200,0,0.15)', color: '#FFC800',
+                            padding: '2px 8px', borderRadius: 6, fontWeight: 800, letterSpacing: 0.4,
+                          }}>COLLAB</span>
+                        )}
+                      </div>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.25)"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" /></svg>
                     </div>
 
-                    {viewedFriends.length === 0 && collabNonFriends.length === 0 && (
+                    {totalViewCount === 0 && (
                       <div style={{ padding: '16px 24px', color: 'rgba(255,255,255,0.25)', fontSize: 14, fontWeight: 600 }}>
                         No one has viewed yet
                       </div>
                     )}
 
+                    {/* ── MY FRIENDS who viewed — [avatar] + [name] + [time] + [react emoji?] + [reply] ── */}
                     {viewedFriends.map((f) => {
                       const reactionEmoji = currentItem?.reactions?.[f.name];
                       return (
@@ -3995,9 +4517,11 @@ export default function HomeScreen({
                           reaction={reactionEmoji}
                           time={viewedBy[f.name]}
                           onReply={() => {
+                            // If there's a reaction → pass it so chat reply includes the react icon
+                            // If no reaction → pass undefined so chat reply only includes the photo
                             setRepliedViewer({
                               name: f.name,
-                              reaction: reactionEmoji || '❤️',
+                              reaction: reactionEmoji || '',
                               identity: f
                             });
                           }}
@@ -4005,8 +4529,13 @@ export default function HomeScreen({
                       );
                     })}
 
-                    {/* Non-friend collab viewers with Add Friend button */}
-                    {collabNonFriends.map((nf) => (
+                    {/* ── COLLAB STRANGERS — Add Friend (cannot reply until friends) ── */}
+                    {collabStrangers.length > 0 && (
+                      <div style={{ padding: '14px 24px 6px', color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>
+                        From collab partner's friends
+                      </div>
+                    )}
+                    {collabStrangers.map((nf) => (
                       <ViewerRow
                         key={nf.id}
                         identity={nf}
@@ -4016,25 +4545,39 @@ export default function HomeScreen({
                       />
                     ))}
 
-                    {/* ── Sent but not yet viewed ── */}
-                    {sentButNotViewed.length > 0 && (
-                      <>
-                        <div style={{ padding: '20px 24px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                            Sent · {sentButNotViewed.length}
-                          </span>
-                        </div>
-                        {sentButNotViewed.map((f) => (
-                          <ViewerRow
-                            key={f.id}
-                            identity={f}
-                            time=""
-                            isSent
-                            onReply={() => { }}
-                          />
-                        ))}
-                      </>
+                    {/* ── ANONYMOUS viewers — masked, no interaction ── */}
+                    {anonymousViewers.length > 0 && (
+                      <div style={{ padding: '14px 24px 6px', color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>
+                        Anonymous
+                      </div>
                     )}
+                    {anonymousViewers.map((av) => (
+                      <div key={av.id} style={{
+                        display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '12px 24px', width: '100%', boxSizing: 'border-box',
+                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                      }}>
+                        {/* Masked avatar */}
+                        <div style={{
+                          width: 46, height: 46, borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #2a2a2a 0%, #404040 100%)',
+                          display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          border: '1.5px solid rgba(255,255,255,0.08)',
+                          flexShrink: 0,
+                        }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          </svg>
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: 700, fontStyle: 'italic' }}>Anonymous</span>
+                            <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', padding: '1px 6px', borderRadius: 6, fontWeight: 700 }}>via {av.viaPartner}</span>
+                          </div>
+                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 500 }}>{av.time}</span>
+                        </div>
+                      </div>
+                    ))}
                   </>
                 );
               })()}
@@ -4051,16 +4594,20 @@ export default function HomeScreen({
                 animation: 'slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 zIndex: 20
               }}>
-                {/* Context Header */}
+                {/* Context Header — conditionally show react badge */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ position: 'relative', width: 34, height: 34 }}>
                       <img src={historyItems[currentHistoryIdx].image} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }} alt="" />
-                      <div style={{ position: 'absolute', top: -5, left: -5, background: '#000', borderRadius: '50%', width: 14, height: 14, display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.3)', fontSize: 10 }}>
-                        {repliedViewer.reaction}
-                      </div>
+                      {repliedViewer.reaction && (
+                        <div style={{ position: 'absolute', top: -5, left: -5, background: '#000', borderRadius: '50%', width: 14, height: 14, display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.3)', fontSize: 10 }}>
+                          {repliedViewer.reaction}
+                        </div>
+                      )}
                     </div>
-                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 700 }}>Replied to {repliedViewer.name}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 700 }}>
+                      {repliedViewer.reaction ? `Replied ${repliedViewer.reaction} to ${repliedViewer.name}` : `Reply to ${repliedViewer.name}`}
+                    </span>
                   </div>
                   <button onClick={() => setRepliedViewer(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: 26, height: 26, borderRadius: '50%', fontSize: 16 }}>×</button>
                 </div>
