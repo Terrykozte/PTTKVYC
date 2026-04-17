@@ -1044,6 +1044,8 @@ export default function HomeScreen({
   });
   const blockFriendClickRef = useRef(false);
 
+  const [mapFocusCoords, setMapFocusCoords] = useState<{ lat: number; lng: number; name: string } | null>(null);
+
   const hSetDown = (e: React.PointerEvent) => {
     if (!hScrollRef.current) return;
 
@@ -3533,7 +3535,7 @@ export default function HomeScreen({
               setTimeout(() => setActiveTab('chat'), 200);
             }}
             onNavigateToMap={(lat, lng, name) => {
-              setSelectedLocation({ lat, lng, name, mapX: 0, mapY: 0 });
+              setMapFocusCoords({ lat, lng, name });
               setShowMapView(true);
             }}
             onAcceptCollab={(itemId) => {
