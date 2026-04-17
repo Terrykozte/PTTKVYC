@@ -47,21 +47,70 @@ const userDotIcon = L.divIcon({
 });
 
 function makePhotoIcon(img: string, count: number, name: string, hl: boolean, delay = 0) {
-  const bdr = hl ? 'rgba(255,214,10,.8)' : 'rgba(255,255,255,.15)';
-  const sh  = hl ? 'rgba(255,214,10,.3)'  : 'rgba(0,0,0,.7)';
+  const bdr = hl ? '#FFD60A' : 'rgba(255,255,255,0.8)';
+  const sh  = hl ? 'rgba(255,214,10,0.45)' : 'rgba(0,0,0,0.4)';
+  
   return L.divIcon({
     className: '',
-    html: `<div style="display:flex;flex-direction:column;align-items:center;animation:pinPop .45s cubic-bezier(.175,.885,.32,1.275) ${delay}s both;">
-      <div style="padding:3px;background:rgba(10,15,26,.97);border-radius:13px;box-shadow:0 10px 28px ${sh},0 0 0 1.5px ${bdr};position:relative;cursor:pointer;">
-        <div style="width:54px;height:54px;border-radius:10px;overflow:hidden;">
-          <img src="${img}" style="width:100%;height:100%;object-fit:cover;" />
+    html: `<div style="display:flex;flex-direction:column;align-items:center;animation:pinPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${delay}s both;">
+      {/* The "Frame Pin" */}
+      <div style="
+        padding: 4px;
+        background: white; 
+        border-radius: 12px; 
+        box-shadow: 0 12px 30px ${sh}, 0 0 0 1px rgba(0,0,0,0.05);
+        position: relative;
+        cursor: pointer;
+        transform: rotate(${hl ? '0deg' : (Math.random() * 4 - 2) + 'deg'});
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      ">
+        <div style="width: 52px; height: 52px; border-radius: 9px; overflow: hidden; background: #eee;">
+          <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
-        ${count > 1 ? `<div style="position:absolute;top:-9px;right:-9px;background:#FFD60A;color:#000;border-radius:50%;width:22px;height:22px;border:2.5px solid rgba(10,15,26,.97);font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;">${count}</div>` : ''}
+        
+        {/* Count badge */}
+        ${count > 1 ? `
+          <div style="
+            position: absolute; top: -10px; right: -10px; 
+            background: #FFD60A; color: #000; border-radius: 50%; 
+            width: 22px; height: 22px; border: 2.5px solid white; 
+            font-size: 11px; font-weight: 950; display: flex; 
+            align-items: center; justify-content: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: 'Outfit', sans-serif;
+          ">${count}</div>
+        ` : ''}
+
+        {/* Pin Tip */}
+        <div style="
+          position: absolute; bottom: -6px; left: 50%; 
+          transform: translateX(-50%); 
+          width: 0; height: 0; 
+          border-left: 6px solid transparent; 
+          border-right: 6px solid transparent; 
+          border-top: 7px solid white;
+        "></div>
       </div>
-      <div style="width:1.5px;height:8px;background:rgba(255,255,255,.28);"></div>
-      <div style="background:rgba(0,0,0,.88);backdrop-filter:blur(10px);padding:3px 9px;border-radius:7px;font-size:9px;font-weight:800;color:rgba(255,255,255,.88);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.1);font-family:-apple-system,sans-serif;letter-spacing:.08px;">${name}</div>
+
+      <div style="height: 12px;"></div>
+      
+      {/* Location Label */}
+      <div style="
+        background: ${hl ? '#FFD60A' : 'rgba(0,0,0,0.75)'}; 
+        backdrop-filter: blur(10px); Webkit-backdrop-filter: blur(10px);
+        padding: 4px 12px; border-radius: 10px; 
+        font-size: 10px; font-weight: 800; 
+        color: ${hl ? '#000' : 'white'}; 
+        white-space: nowrap; max-width: 130px; 
+        overflow: hidden; text-overflow: ellipsis; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: 0.2px;
+        transform: translateY(-2px);
+      ">${name}</div>
     </div>`,
-    iconSize: [120, 86], iconAnchor: [60, 86],
+    iconSize: [140, 100], iconAnchor: [70, 100],
   });
 }
 

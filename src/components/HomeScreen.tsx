@@ -2724,18 +2724,16 @@ export default function HomeScreen({
               data-name="Button / Action / Aa"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
-              <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-                {/* Aa Text */}
-                <text x="21" y="27" fontSize="15" fontWeight="800" fill="white" textAnchor="middle" fontFamily="sans-serif">Aa</text>
+              <svg width="48" height="48" viewBox="0 0 44 44" fill="none">
+                {/* Authentic Locket-style Aa icon */}
+                <circle cx="22" cy="22" r="15" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+                <text x="22" y="27.5" fontSize="16" fontWeight="950" fill="white" textAnchor="middle" fontFamily="-apple-system, sans-serif" letterSpacing="-0.5">Aa</text>
 
-                {/* Partial circle: starts at top right, goes CCW around */}
-                <path d="M 26 9 A 14 14 0 1 0 34 25" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-
-                {/* Authentic 4-Point Star Sparkle 1 (Large) */}
-                <path d="M 35 11 Q 35 15 39 15 Q 35 15 35 19 Q 35 15 31 15 Q 35 15 35 11" fill="white" />
-
-                {/* Authentic 4-Point Star Sparkle 2 (Small) */}
-                <path d="M 29 4 Q 29 7 32 7 Q 29 7 29 10 Q 29 7 26 7 Q 29 7 29 4" fill="white" />
+                {/* Shimmering Sparkles */}
+                <path d="M 36 12 Q 36 15 39 15 Q 36 15 36 18 Q 36 15 33 15 Q 36 15 36 12" fill="#FFD60A" />
+                <path d="M 30 6 Q 30 8 32 8 Q 30 8 30 10 Q 30 8 28 8 Q 30 8 30 6" fill="white" />
+                <circle cx="10" cy="14" r="1.5" fill="white" opacity="0.6" />
+                <circle cx="34" cy="32" r="1.2" fill="white" opacity="0.4" />
               </svg>
             </div>
           )}
@@ -2745,7 +2743,7 @@ export default function HomeScreen({
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
       {/* HISTORY / FRIEND SELECTOR — same position */}
-      <div className="history-area" style={{ marginBottom: 0, paddingBottom: mode === 'camera' ? `calc(165px + var(--safe-bottom))` : `var(--safe-bottom)` }}>
+      <div className="history-area" style={{ marginBottom: 0, paddingBottom: mode === 'camera' ? `calc(165px + var(--safe-bottom))` : `calc(85px + var(--safe-bottom))` }}>
         {mode === 'camera' ? (
           <button
             className="btn-history"
@@ -3533,6 +3531,10 @@ export default function HomeScreen({
               setDeepLinkChatName(senderName);
               setDeepLinkChatColor(senderColor);
               setTimeout(() => setActiveTab('chat'), 200);
+            }}
+            onNavigateToMap={(lat, lng, name) => {
+              setSelectedLocation({ lat, lng, name, mapX: 0, mapY: 0 });
+              setShowMapView(true);
             }}
             onAcceptCollab={(itemId) => {
               setHistoryItems(prev => prev.map(i =>

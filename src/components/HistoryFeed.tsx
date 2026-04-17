@@ -34,6 +34,7 @@ interface HistoryFeedProps {
   historyFeedRef: React.RefObject<HTMLDivElement | null>;
   MOCK_FRIENDS: any[];
   onNavigateToChat?: (senderName: string, senderColor: string, context: ContextPhoto) => void;
+  onNavigateToMap?: (lat: number, lng: number, name: string) => void;
   onAcceptCollab?: (itemId: string) => void;
   onDeclineCollab?: (itemId: string) => void;
   onLeaveCollab?: (itemId: string) => void;
@@ -64,6 +65,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
   historyFeedRef,
   MOCK_FRIENDS,
   onNavigateToChat,
+  onNavigateToMap,
   onAcceptCollab,
   onDeclineCollab,
   onLeaveCollab,
@@ -339,6 +341,25 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                         }}
                       >
                         <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{item.caption}</span>
+                        {item.location && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const [lat, lng] = [22.62 - (item.location.mapY / 100) * 15, 102.15 + (item.location.mapX / 100) * 7];
+                              onNavigateToMap?.(lat, lng, item.location.name);
+                            }}
+                            style={{
+                              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', 
+                              width: 24, height: 24, display: 'flex', justifyContent: 'center', alignItems: 'center',
+                              marginLeft: 4, cursor: 'pointer'
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                              <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                          </button>
+                        )}
                         {item.captionEdited && isMeAuthor && (
                           <svg aria-label="Đã chỉnh sửa" width="13" height="13" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)">
                             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
