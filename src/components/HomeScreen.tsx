@@ -1248,10 +1248,7 @@ export default function HomeScreen({
   const [activeChallengeSlot, setActiveChallengeSlot] = useState<{
     week: 'W1' | 'W2' | 'W3' | 'W4'; dayIndex: number; theme: string; month: number;
   } | null>({ month: 4, week: 'W2', dayIndex: 6, theme: 'Thiên nhiên' });
-  const [showMemoryDetail, setShowMemoryDetail] = useState(false);
-  const [showMapView, setShowMapView] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<PickedLocation | null>(null);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // 🎉 Auto-trigger Location Picker when selecting from Captions flow
   useEffect(() => {
