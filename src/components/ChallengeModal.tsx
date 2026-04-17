@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { type WeekKey, getMonthlyChallengeConfig, WEEK_IMAGES } from '../mockData';
 
 type MonthState = 'past' | 'current' | 'future';
 type ViewState = 'months' | 'weeks';
+type WeekState = 'past' | 'active' | 'hidden';
 
 // ─── Dynamic date constants ───────────────────────────────────────────────────
 const _now = new Date();
@@ -36,7 +37,13 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [sheetOffset, setSheetOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
+  const [viewingThemeImage, setViewingThemeImage] = useState<string | null>(null);
+  // Week photo slider state
+  const [weekSlider, setWeekSlider] = useState<{
+    month: number;
+    weekKey: WeekKey;
+    startIdx: number;
+  } | null>(null);
   const dragRef = useRef({ isDown: false, startY: 0, lastY: 0, lastT: 0, vel: 0 });
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -286,24 +293,33 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                   color: 'rgba(255,255,255,0.35)', fontSize: 13, fontWeight: 700,
                   display: 'flex', alignItems: 'center', gap: 7,
                 }}>
-                  🔒 Tháng đã kết thúc — chỉ xem
+                  ✅ Tháng đã kết thúc — xem lại kỷ niệm
                 </div>
               )}
 
               {getMonthlyChallengeConfig(selectedMonth).map((week) => {
                 const filledCount = Array.from({ length: 7 }, (_, i) => challengeImages[`M${selectedMonth}-${week.key}-${i}`]).filter(Boolean).length;
 
-                const getWeekState = (key: string): 'locked' | 'active' | 'hidden' => {
-                  if (!isCurrentMonth) return isPastMonth ? 'locked' : 'hidden';
+                const getWeekState = (key: string): WeekState => {
+                  if (!isCurrentMonth) return isPastMonth ? 'past' : 'hidden';
                   const wNum = parseInt(key.replace('W', ''));
-                  if (wNum < _curWeekNum) return 'locked';
+                  if (wNum < _curWeekNum) return 'past';
                   if (wNum === _curWeekNum) return 'active';
                   return 'hidden';
                 };
 
                 const weekState = getWeekState(week.key);
-                const isLocked = weekState === 'locked';
+                const isPast = weekState === 'past';
+                const isActive = weekState === 'active';
                 const isHidden = weekState === 'hidden';
+
+                // Completion status for Past weeks (spec: Successfully Completed vs Failed/Ended)
+                const completion: 'success' | 'failed' | 'none' =
+                  !isPast ? 'none' : filledCount === 7 ? 'success' : 'failed';
+
+                // Find the user's first photo for this week (for banner)
+                const userCoverImg = Array.from({ length: 7 }, (_, i) => challengeImages[`M${selectedMonth}-${week.key}-${i}`]).find(Boolean);
+                const themeImg = WEEK_IMAGES[week.key];
 
                 return (
                   <div
@@ -318,16 +334,22 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                     }}
                   >
                     <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                      {/* Main background: user's cover photo if available, otherwise theme image */}
                       <img
-                        src={WEEK_IMAGES[week.key]}
+                        src={userCoverImg || themeImg}
                         alt={week.theme}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                          filter: isPast && !userCoverImg ? 'grayscale(0.4)' : 'none',
+                        }}
                       />
                       {/* Dark gradient overlay */}
                       <div style={{
                         position: 'absolute', inset: 0,
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)',
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.6) 100%)',
                       }} />
+
+                      {/* Theme name */}
                       <div style={{
                         position: 'absolute', bottom: 10, left: 14,
                         color: 'white', fontSize: 16, fontWeight: 900, letterSpacing: -0.3,
@@ -336,20 +358,89 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                         {week.theme}
                       </div>
 
-                      {isLocked && (
+                      {/* Completion badge overlay — covers ALL three UI states */}
+                      {(isPast || isActive) && (
                         <div style={{
                           position: 'absolute', inset: 0,
-                          background: 'rgba(0,0,0,0.3)', backdropFilter: 'grayscale(1)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          background: isPast ? 'rgba(0,0,0,0.15)' : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          <div style={{ padding: '4px 12px', background: 'rgba(0,0,0,0.6)', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(255,255,255,0.2)' }}>
-                            <span>🔒</span>
-                            <span style={{ color: 'white', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>Locked</span>
+                          {completion === 'success' && (
+                            <div style={{
+                              padding: '5px 14px',
+                              background: 'linear-gradient(135deg, rgba(52,199,89,0.92), rgba(36,163,72,0.92))',
+                              borderRadius: 22, display: 'flex', alignItems: 'center', gap: 7,
+                              border: '1px solid rgba(255,255,255,0.35)',
+                              boxShadow: '0 6px 20px rgba(52,199,89,0.35)',
+                              backdropFilter: 'blur(8px)',
+                            }}>
+                              <span style={{ fontSize: 13 }}>🏆</span>
+                              <span style={{ color: '#fff', fontSize: 11.5, fontWeight: 900, letterSpacing: 0.2 }}>
+                                Hoàn thành 7/7 ngày
+                              </span>
+                            </div>
+                          )}
+                          {completion === 'failed' && (
+                            <div style={{
+                              padding: '5px 14px',
+                              background: 'rgba(30,30,30,0.78)',
+                              borderRadius: 22, display: 'flex', alignItems: 'center', gap: 7,
+                              border: '1px solid rgba(255,69,58,0.35)',
+                              backdropFilter: 'blur(8px)',
+                            }}>
+                              <span style={{ fontSize: 13 }}>⏰</span>
+                              <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11.5, fontWeight: 800 }}>
+                                Đã kết thúc · {filledCount}/7
+                              </span>
+                            </div>
+                          )}
+                          {isActive && (
+                            <div style={{
+                              position: 'absolute', top: 12, left: 12,
+                              padding: '4px 12px',
+                              background: 'linear-gradient(135deg, rgba(255,200,0,0.95), rgba(255,140,0,0.92))',
+                              borderRadius: 16, display: 'flex', alignItems: 'center', gap: 6,
+                              boxShadow: '0 4px 14px rgba(255,200,0,0.35)',
+                            }}>
+                              <span style={{
+                                width: 6, height: 6, borderRadius: '50%', background: '#fff',
+                                boxShadow: '0 0 0 2px rgba(255,255,255,0.3)',
+                                animation: 'pulse 1.6s ease-in-out infinite',
+                              }} />
+                              <span style={{ color: '#000', fontSize: 10.5, fontWeight: 900, letterSpacing: 0.3 }}>
+                                ĐANG DIỄN RA · {filledCount}/7
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Theme sample thumbnail — top-right */}
+                      {userCoverImg && (
+                        <div
+                          onClick={(e) => { e.stopPropagation(); setViewingThemeImage(themeImg); }}
+                          style={{
+                            position: 'absolute', top: 8, right: 52,
+                            width: 40, height: 40, borderRadius: 10, overflow: 'hidden',
+                            border: '2px solid rgba(255,255,255,0.5)',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <img src={themeImg} alt="Theme" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(0,0,0,0.15)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                              <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
                           </div>
                         </div>
                       )}
 
-                      {/* Week key badge on image */}
+                      {/* Week key badge */}
                       <div style={{
                         position: 'absolute', top: 10, right: 12,
                         background: 'rgba(0,0,0,0.45)',
@@ -400,7 +491,10 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                             <div
                               key={dayIndex}
                               onClick={() => {
-                                if (img) { setViewingPhoto(img); return; }
+                                if (img) {
+                                  setWeekSlider({ month: selectedMonth!, weekKey: week.key, startIdx: dayIndex });
+                                  return;
+                                }
                                 if (canAdd) onSelectSlot(week.key, dayIndex, week.theme, selectedMonth!);
                               }}
                               style={{
@@ -409,7 +503,7 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
                                 border: img ? '1px solid rgba(255,255,255,0.08)' : (isToday
                                   ? '1.5px solid rgba(255,200,0,0.4)'
                                   : '1.5px dashed rgba(255,255,255,0.07)'),
-                                cursor: canAdd ? 'pointer' : 'default',
+                                cursor: (canAdd || img) ? 'pointer' : 'default',
                                 position: 'relative',
                                 filter: (status !== 'today' && !img) ? 'grayscale(1) opacity(0.6)' : 'none',
                                 transition: 'all 0.2s ease',
@@ -473,24 +567,27 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
 
         </div>
 
-        {/* Photo Viewer Overlay */}
-        {viewingPhoto && (
+        {/* Theme Image Viewer */}
+        {viewingThemeImage && (
           <div
-            onClick={() => setViewingPhoto(null)}
+            onClick={() => setViewingThemeImage(null)}
             style={{
               position: 'absolute', inset: 0, zIndex: 9999,
               background: 'rgba(0,0,0,0.92)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
               borderRadius: '32px 32px 0 0',
             }}
           >
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Theme Sample
+            </div>
             <img
-              src={viewingPhoto}
+              src={viewingThemeImage}
               alt=""
-              style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: 16, objectFit: 'contain' }}
+              style={{ maxWidth: '90%', maxHeight: '75%', borderRadius: 16, objectFit: 'contain' }}
             />
             <button
-              onClick={() => setViewingPhoto(null)}
+              onClick={() => setViewingThemeImage(null)}
               style={{
                 position: 'absolute', top: 20, right: 20,
                 background: 'rgba(255,255,255,0.15)', border: 'none',
@@ -501,6 +598,215 @@ export default function ChallengeModal({ onClose, challengeImages, onSelectSlot 
             >×</button>
           </div>
         )}
+
+        {/* Week Photo Slider — full-screen swipeable viewer scoped to 7 days */}
+        {weekSlider && (
+          <WeekViewerModal
+            month={weekSlider.month}
+            weekKey={weekSlider.weekKey}
+            startIdx={weekSlider.startIdx}
+            challengeImages={challengeImages}
+            onClose={() => setWeekSlider(null)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── WeekViewerModal ────────────────────────────────────────────────────────
+// Full-screen swipeable photo slider scoped to 7 days of a specific week.
+// CSS Scroll Snap for smooth horizontal swiping, thumbnail strip at bottom.
+
+function WeekViewerModal({
+  month,
+  weekKey,
+  startIdx,
+  challengeImages,
+  onClose,
+}: {
+  month: number;
+  weekKey: WeekKey;
+  startIdx: number;
+  challengeImages: Record<string, string>;
+  onClose: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(startIdx);
+
+  // Build the 7 slots for this week
+  const slots = Array.from({ length: 7 }, (_, i) => {
+    const key = `M${month}-${weekKey}-${i}`;
+    return { dayIndex: i, image: challengeImages[key] || null };
+  });
+
+  // Get the week config for the theme name
+  const weekConfig = getMonthlyChallengeConfig(month).find(w => w.key === weekKey);
+  const themeName = weekConfig?.theme || weekKey;
+
+  // Scroll to the starting index on mount
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const timer = setTimeout(() => {
+      const w = el.clientWidth;
+      el.scrollTo({ left: startIdx * w, behavior: 'auto' });
+    }, 30);
+    return () => clearTimeout(timer);
+  }, [startIdx]);
+
+  // Track scroll position to update active index
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const w = el.clientWidth;
+    if (w === 0) return;
+    const idx = Math.round(el.scrollLeft / w);
+    setActiveIdx(Math.max(0, Math.min(6, idx)));
+  }, []);
+
+  const scrollToIdx = (idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.96)',
+        display: 'flex', flexDirection: 'column',
+        borderRadius: '32px 32px 0 0',
+        overflow: 'hidden',
+        animation: 'fadeInOverlay 0.25s ease-out',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px 8px',
+        flexShrink: 0,
+      }}>
+        <div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            {weekKey} — {themeName}
+          </div>
+          <div style={{ color: 'white', fontSize: 17, fontWeight: 900, marginTop: 2 }}>
+            Ngày {activeIdx + 1} / 7
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer',
+            borderRadius: '50%', width: 36, height: 36,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Horizontal scroll snap container */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        style={{
+          flex: 1,
+          display: 'flex',
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <style>{`.wk-slider-scroll::-webkit-scrollbar { display: none; }`}</style>
+        {slots.map((slot, idx) => (
+          <div
+            key={idx}
+            style={{
+              flex: '0 0 100%',
+              width: '100%',
+              height: '100%',
+              scrollSnapAlign: 'start',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 20,
+            }}
+          >
+            {slot.image ? (
+              <img
+                src={slot.image}
+                alt={`Day ${idx + 1}`}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  borderRadius: 18,
+                  objectFit: 'contain',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                }}
+              />
+            ) : (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                color: 'rgba(255,255,255,0.25)',
+              }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: 16,
+                  border: '2px dashed rgba(255,255,255,0.12)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24,
+                }}>
+                  📷
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Chưa có ảnh</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Thumbnail strip at bottom */}
+      <div style={{
+        flexShrink: 0,
+        padding: '12px 16px 24px',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 8,
+      }}>
+        {slots.map((slot, idx) => (
+          <div
+            key={idx}
+            onClick={() => scrollToIdx(idx)}
+            style={{
+              width: 44, height: 44, borderRadius: 10, overflow: 'hidden',
+              flexShrink: 0, cursor: 'pointer',
+              border: idx === activeIdx
+                ? '2.5px solid #FFD60A'
+                : '2px solid rgba(255,255,255,0.1)',
+              boxShadow: idx === activeIdx ? '0 0 12px rgba(255,214,10,0.3)' : 'none',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              background: slot.image ? 'transparent' : 'rgba(255,255,255,0.06)',
+            }}
+          >
+            {slot.image ? (
+              <img src={slot.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <div style={{
+                width: '100%', height: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.2)', fontSize: 10, fontWeight: 800,
+              }}>
+                D{idx + 1}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
