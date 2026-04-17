@@ -1237,9 +1237,6 @@ export default function HomeScreen({
   const [activeReplyContext, setActiveReplyContext] = useState<any>(undefined);
   const [deepLinkChatName, setDeepLinkChatName] = useState<string | undefined>(undefined);
   const [deepLinkChatColor, setDeepLinkChatColor] = useState<string | undefined>(undefined);
-  const [showMapView, setShowMapView] = useState(false);
-  const [lastSentLocation, setLastSentLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // ── Challenge & Memories state ──
   const [showChallengeModal, setShowChallengeModal] = useState(false);
@@ -1249,7 +1246,10 @@ export default function HomeScreen({
     week: 'W1' | 'W2' | 'W3' | 'W4'; dayIndex: number; theme: string; month: number;
   } | null>({ month: 4, week: 'W2', dayIndex: 6, theme: 'Thiên nhiên' });
   const [showMemoryDetail, setShowMemoryDetail] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
+  const [lastSentLocation, setLastSentLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<PickedLocation | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // 🎉 Auto-trigger Location Picker when selecting from Captions flow
   useEffect(() => {
@@ -1946,14 +1946,6 @@ export default function HomeScreen({
 
       setHistoryItems(prev => [newItem, ...prev]);
 
-      if (newItem.location) {
-        setLastSentLocation({
-          name: newItem.location.name,
-          lat: 22.62 - (newItem.location.mapY / 100) * 15,
-          lng: 102.15 + (newItem.location.mapX / 100) * 7
-        });
-      }
-
       // Save challenge slot image if applicable
       if (resolvedSlot) {
         const slotKey = `M${resolvedSlot.month}-${resolvedSlot.week}-${resolvedSlot.dayIndex}`;
@@ -2500,7 +2492,7 @@ export default function HomeScreen({
                             </div>
                             {aiCaptionLoading ? (
                               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '10px 0' }}>
-                                {[0,1,2].map(i => (
+                                {[0, 1, 2].map(i => (
                                   <div key={i} style={{
                                     width: 6, height: 6, borderRadius: '50%',
                                     background: 'rgba(255,255,255,0.6)',
@@ -3864,7 +3856,6 @@ export default function HomeScreen({
         <MapsArchiveView
           historyItems={historyItems}
           viewerIdentity={viewerIdentity}
-          initialFocusLocation={lastSentLocation}
           onClose={() => setShowMapView(false)}
         />
       )}
