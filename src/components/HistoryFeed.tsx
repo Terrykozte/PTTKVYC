@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export interface ContextPhoto {
   url: string;
@@ -38,11 +38,107 @@ interface HistoryFeedProps {
   onAcceptCollab?: (itemId: string) => void;
   onDeclineCollab?: (itemId: string) => void;
   onLeaveCollab?: (itemId: string) => void;
+  // Accept the scroll-triggered Ask-to-Collab (Perspective 4).
+  // Transforms the personal post into a collab post with the viewer as a partner.
+  onAcceptAskToCollab?: (itemId: string) => void;
+  onDismissAskToCollab?: (itemId: string) => void;
   isFriend: (name: string) => boolean;
   sortAvatars: (partners: any[], viewerId: string) => any[];
 }
 
 let _bubbleId = 0;
+
+// ── LIMITS ──
+const MAX_AVATAR_STACK = 7;   // Max avatars shown in the collab pill
+const MAX_MERGE_IMAGES = 5;   // Max images for collage/merge view
+
+// ── Scroll-triggered "Ask to collab" inline card (Perspective 4) ──
+// Appears on posts flagged with askToCollabPrompt. Accepting transforms
+// the personal post into a collab post (the viewer joins as a partner).
+interface AskToCollabCardProps {
+  authorName: string;
+  authorColor: string;
+  authorAvatar?: string;
+  onAccept: () => void;
+  onDismiss: () => void;
+}
+const AskToCollabCard: React.FC<AskToCollabCardProps> = ({ authorName, authorColor, authorAvatar, onAccept, onDismiss }) => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 260);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div
+      style={{
+        position: 'absolute', left: 16, right: 16, bottom: 120,
+        background: 'rgba(30, 30, 30, 0.75)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+        borderRadius: 32, padding: 20,
+        border: '1px solid rgba(255,200,0,0.25)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,200,0,0.1) inset',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(28px)',
+        transition: 'opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1)',
+        zIndex: 20,
+        pointerEvents: 'auto',
+      }}
+    >
+      {/* Header row — avatar + text */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: '50%',
+          backgroundColor: authorColor,
+          backgroundImage: authorAvatar ? `url(${authorAvatar})` : undefined,
+          backgroundSize: 'cover', flexShrink: 0,
+          border: '2.5px solid #FFC800', padding: 2,
+        }}>
+          {!authorAvatar && (
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <span style={{ fontSize: 18, fontWeight: 900, color: 'white' }}>{authorName[0]}</span>
+            </div>
+          )}
+        </div>
+        <div>
+          <div style={{ color: '#fff', fontSize: 16, fontWeight: 800 }}>
+            Collab Request
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, marginTop: 1 }}>
+            {authorName} wants to pair photos with you
+          </div>
+        </div>
+      </div>
+      {/* Action buttons — Decline / Accept */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+          style={{
+            flex: 1, height: 50, borderRadius: 25,
+            background: 'rgba(255,255,255,0.1)', border: 'none',
+            color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            transition: 'transform 0.15s ease, background 0.15s ease',
+          }}
+          onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
+          onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+          onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+        >Decline</button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAccept(); }}
+          style={{
+            flex: 1, height: 50, borderRadius: 25,
+            background: '#FFC800', border: 'none',
+            color: '#000', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(255,200,0,0.25)',
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
+          onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+          onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+        >Accept</button>
+      </div>
+    </div>
+  );
+};
+
 
 const HistoryFeed: React.FC<HistoryFeedProps> = ({
   historyItems,
@@ -69,6 +165,8 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
   onAcceptCollab,
   onDeclineCollab,
   onLeaveCollab,
+  onAcceptAskToCollab,
+  onDismissAskToCollab,
   isFriend,
   sortAvatars,
 }) => {
@@ -203,13 +301,16 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
             style={{
               width: '100%',
               height: '100%',
-              flex: 'none',
+              flex: '0 0 100%',
               scrollSnapAlign: 'start',
               scrollSnapStop: 'always',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              // Isolate each post into its own composite layer so scrolling
+              // doesn't re-paint every other post in the feed.
+              contain: 'layout paint size',
             }}
           >
             <div style={{ height: 185, flexShrink: 0 }} />
@@ -227,8 +328,14 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                     background: 'linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.85) 100%)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
                     padding: 20, zIndex: 12,
-                    animation: 'fadeIn 0.3s ease-out'
+                    animation: 'collabSlideIn 0.5s cubic-bezier(0.16,1,0.3,1) both'
                   }}>
+                    <style>{`
+                      @keyframes collabSlideIn {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                      }
+                    `}</style>
                     <div style={{
                       background: 'rgba(30, 30, 30, 0.75)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
                       borderRadius: 32, padding: 20, border: '1px solid rgba(255,255,255,0.12)',
@@ -262,9 +369,13 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                           onClick={(e) => { e.stopPropagation(); onDeclineCollab?.(item.id); }}
                           style={{
                             flex: 1, height: 50, borderRadius: 25,
-                            background: 'rgba(255,255,255,0.08)', border: 'none',
+                            background: 'rgba(255,255,255,0.1)', border: 'none',
                             color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                            transition: 'transform 0.15s ease, background 0.15s ease',
                           }}
+                          onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
+                          onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+                          onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                         >Decline</button>
                         <button
                           onClick={(e) => { e.stopPropagation(); onAcceptCollab?.(item.id); }}
@@ -273,11 +384,27 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                             background: '#FFC800', border: 'none',
                             color: '#000', fontSize: 15, fontWeight: 800, cursor: 'pointer',
                             boxShadow: '0 8px 24px rgba(255,200,0,0.25)',
+                            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                           }}
+                          onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
+                          onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+                          onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                         >Accept</button>
                       </div>
                     </div>
                   </div>
+                )}
+
+
+                {/* ── Perspective 4: scroll-triggered Ask-to-collab card ── */}
+                {item.askToCollabPrompt && !item.collabStatus && !isMeAuthor && (
+                  <AskToCollabCard
+                    authorName={item.sender}
+                    authorColor={item.senderColor}
+                    authorAvatar={getIdentity(item.sender).avatar}
+                    onAccept={() => onAcceptAskToCollab?.(item.id)}
+                    onDismiss={() => onDismissAskToCollab?.(item.id)}
+                  />
                 )}
 
                 {item.collabStatus === 'accepted' && isMeAuthor && hasCollabs && (
@@ -324,62 +451,87 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                       </button>
                     </div>
                   ) : (
-                    item.caption && item.collabStatus !== 'pending' ? (
-                      <div
-                        onClick={(e) => {
-                          if (!item.captionEdited && isMeAuthor) {
-                            e.stopPropagation();
-                            setPendingCaption(item.caption || '');
-                            setEditingCaptionId(item.id);
-                          }
-                        }}
-                        style={{
-                          background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(14px)', borderRadius: 22, padding: '9px 20px',
-                          cursor: (!item.captionEdited && isMeAuthor) ? 'pointer' : 'default',
-                          border: item.captionEdited ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                          display: 'flex', alignItems: 'center', gap: 7,
-                        }}
-                      >
-                        <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{item.caption}</span>
-                        {item.location && (
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const [lat, lng] = [22.62 - (item.location.mapY / 100) * 15, 102.15 + (item.location.mapX / 100) * 7];
-                              onNavigateToMap?.(lat, lng, item.location.name);
-                            }}
-                            style={{
-                              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', 
-                              width: 24, height: 24, display: 'flex', justifyContent: 'center', alignItems: 'center',
-                              marginLeft: 4, cursor: 'pointer'
-                            }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                              <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                          </button>
-                        )}
-                        {item.captionEdited && isMeAuthor && (
-                          <svg aria-label="Đã chỉnh sửa" width="13" height="13" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                          </svg>
-                        )}
-                      </div>
-                    ) : (
-                      isMeAuthor && !item.captionEdited && !item.collabStatus && (
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPendingCaption('');
-                            setEditingCaptionId(item.id);
-                          }}
-                          style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(14px)', borderRadius: 20, padding: '6px 16px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}
-                        >
-                          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 700 }}>Edit</span>
-                        </div>
-                      )
-                    )
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      {/* SINGLE PILL MODE: Challenge > Location > Text */}
+                      {(() => {
+                        if (item.isChallenge && item.caption) {
+                          // CHALLENGE PILL
+                          return (
+                            <div style={{
+                              background: 'rgba(255,100,100,0.25)', backdropFilter: 'blur(14px)', borderRadius: 22, padding: '9px 20px',
+                              border: '1px solid rgba(255,140,140,0.3)', display: 'flex', alignItems: 'center', gap: 7,
+                            }}>
+                              <span style={{ fontSize: 16 }}>🎯</span>
+                              <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{item.caption}</span>
+                            </div>
+                          );
+                        } else if (item.location) {
+                          // LOCATION PILL
+                          return (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const lat = 22.62 - (item.location!.mapY / 100) * 15;
+                                const lng = 102.15 + (item.location!.mapX / 100) * 7;
+                                onNavigateToMap?.(lat, lng, item.location!.name);
+                              }}
+                              style={{
+                                background: 'rgba(0,102,255,0.35)', backdropFilter: 'blur(14px)', borderRadius: 22, padding: '9px 18px',
+                                cursor: 'pointer', border: '1px solid rgba(0,122,255,0.4)',
+                                display: 'flex', alignItems: 'center', gap: 6,
+                              }}
+                            >
+                              <span style={{ fontSize: 14 }}>📍</span>
+                              <span style={{ color: '#fff', fontSize: 15, fontWeight: 800 }}>{item.location.name}</span>
+                            </div>
+                          );
+                        } else if (item.caption) {
+                          // TEXT CAPTION PILL
+                          const isImmutable = !!item.captionEdited;
+                          const canEdit = isMeAuthor && !isImmutable;
+                          return (
+                            <div
+                              onClick={(e) => {
+                                if (canEdit) {
+                                  e.stopPropagation();
+                                  setPendingCaption(item.caption || '');
+                                  setEditingCaptionId(item.id);
+                                }
+                              }}
+                              style={{
+                                background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(14px)', borderRadius: 22, padding: '9px 20px',
+                                cursor: canEdit ? 'pointer' : 'default',
+                                border: canEdit ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                                display: 'flex', alignItems: 'center', gap: 7,
+                              }}
+                            >
+                              <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{item.caption}</span>
+                              {canEdit && <span style={{ fontSize: 13, opacity: 0.8 }}>✏️</span>}
+                            </div>
+                          );
+                        } else if (isMeAuthor && !item.captionEdited && !item.collabStatus) {
+                          // FALLBACK EDIT BUTTON (if no selection made yet)
+                          return (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingCaption('');
+                                setEditingCaptionId(item.id);
+                              }}
+                              style={{
+                                background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(14px)', borderRadius: 20, padding: '8px 20px',
+                                cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)',
+                                display: 'flex', alignItems: 'center', gap: 6
+                              }}
+                            >
+                              <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 800 }}>Add Caption</span>
+                              <span style={{ fontSize: 13, opacity: 0.8 }}>✏️</span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
                   )}
                 </div>
               </div>
@@ -438,9 +590,9 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                       backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)'
                     }}
                   >
-                    {/* AVATAR STACK */}
+                    {/* AVATAR STACK — up to MAX_AVATAR_STACK */}
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {allParticipants.slice(0, 3).map((p, pIdx) => (
+                      {allParticipants.slice(0, MAX_AVATAR_STACK).map((p, pIdx) => (
                         <div
                           key={p.id || p.name}
                           style={{
@@ -461,6 +613,18 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                           )}
                         </div>
                       ))}
+                      {allParticipants.length > MAX_AVATAR_STACK && (
+                        <div style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.15)',
+                          border: '1.5px solid rgba(255,255,255,0.3)',
+                          marginLeft: -8,
+                          display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          fontSize: 10, fontWeight: 800, color: '#fff',
+                        }}>
+                          +{allParticipants.length - MAX_AVATAR_STACK}
+                        </div>
+                      )}
                     </div>
 
                     {/* NAMES & TIME */}
@@ -491,8 +655,8 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
               })()}
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ height: 25 }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <div style={{ height: 10 }} />
               {isMeAuthor ? (
                 <div style={{ padding: '0 40px', display: 'flex', justifyContent: 'center' }}>
                   <button onClick={() => setShowViewersModal(true)} style={{
@@ -632,7 +796,7 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
                   </div>
                 </div>
               )}
-              <div style={{ height: 160 }} />
+              <div style={{ height: 110 }} />
             </div>
           </div>
         );
@@ -641,4 +805,4 @@ const HistoryFeed: React.FC<HistoryFeedProps> = ({
   );
 };
 
-export default HistoryFeed;
+export default React.memo(HistoryFeed);
