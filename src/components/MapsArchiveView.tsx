@@ -53,7 +53,6 @@ function makePhotoIcon(img: string, count: number, name: string, hl: boolean, de
   return L.divIcon({
     className: '',
     html: `<div style="display:flex;flex-direction:column;align-items:center;animation:pinPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${delay}s both;">
-      {/* The "Frame Pin" */}
       <div style="
         padding: 4px;
         background: white; 
@@ -68,7 +67,6 @@ function makePhotoIcon(img: string, count: number, name: string, hl: boolean, de
           <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
         
-        {/* Count badge */}
         ${count > 1 ? `
           <div style="
             position: absolute; top: -10px; right: -10px; 
@@ -81,7 +79,6 @@ function makePhotoIcon(img: string, count: number, name: string, hl: boolean, de
           ">${count}</div>
         ` : ''}
 
-        {/* Pin Tip */}
         <div style="
           position: absolute; bottom: -6px; left: 50%; 
           transform: translateX(-50%); 
@@ -94,7 +91,6 @@ function makePhotoIcon(img: string, count: number, name: string, hl: boolean, de
 
       <div style="height: 12px;"></div>
       
-      {/* Location Label */}
       <div style="
         background: ${hl ? '#FFD60A' : 'rgba(0,0,0,0.75)'}; 
         backdrop-filter: blur(10px); Webkit-backdrop-filter: blur(10px);
