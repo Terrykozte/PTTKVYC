@@ -22,6 +22,7 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 html,
@@ -75,15 +76,30 @@ body {
     --safe-bottom: env(safe-area-inset-bottom, 34px);
   }
 
+  html, body, #root {
+    /* 100svh = smallest viewport height → the space that's ALWAYS visible,
+       even when the browser chrome is showing. Prevents the layout from
+       jumping when the URL bar collapses. */
+    height: 100svh !important;
+    min-height: 100svh;
+    max-height: 100svh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+  }
+
   .phone {
     width: 100%;
-    height: 100dvh; /* Fullscreen only on mobile */
+    height: 100svh; /* Fullscreen only on mobile */
+    max-height: 100svh;
     border-radius: 0;
     box-shadow: none;
     transform: none !important;
     background: #000;
   }
-  
+
   /* Hide simulated system UI on real mobile devices */
   .island, .sbar {
     display: none !important;
@@ -92,6 +108,35 @@ body {
   .topbar {
     padding-top: var(--safe-top) !important;
     min-height: calc(var(--safe-top) + 48px) !important;
+  }
+}
+
+/* ── TRUE STANDALONE / FULLSCREEN PWA MODE ──
+   When launched from homescreen, browser chrome is already gone.
+   We pin body so nothing can scroll beneath the app and reveal browser UI. */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  html, body, #root {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .phone {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    height: 100dvh !important;
+    background: #000;
+  }
+  /* Hide simulated desktop chrome (dynamic island / status bar) in PWA mode */
+  .island, .sbar { display: none !important; }
+  .topbar {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    min-height: calc(env(safe-area-inset-top, 0px) + 48px) !important;
   }
 }
 
@@ -1353,4 +1398,40 @@ body {
 .btn-friends svg {
   width: 24px;
   height: 24px;
+}
+
+/* ── SCROLL SMOOTHNESS UTILITIES ── */
+.disable-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.disable-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hardware-accelerated smooth scrolling for all scrollable areas */
+.friend-selector-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* History feed vertical scroll — buttery smooth */
+.history-feed-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* Prevent rubber-band / bounce on all scroll containers */
+.no-overscroll {
+  overscroll-behavior: none;
 }
